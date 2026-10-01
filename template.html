@@ -1,0 +1,1792 @@
+<!DOCTYPE html>
+<html lang="__HTML_LANG__" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231d9bf0'/%3E%3C/svg%3E">
+<meta name="x-dashboard-mode" content="__MODE__">
+<!--__HEAD_EXTRA__-->
+<title>X growth dashboard</title>
+<!--__ECHARTS__-->
+<style>
+/*__INTER__*/
+:root{
+  --bg:#0b0f14;--card:#121820;--card2:#181f28;--line:#243040;--txt:#e8eef3;--mut:#8b98a5;
+  --acc:#3b82f6;--ok:#22c55e;--bad:#f43f5e;--warn:#f59e0b;--vio:#a78bfa;--shadow:0 8px 24px rgba(0,0,0,.28);
+  --bar:rgba(11,15,20,.94);
+  --tl-green:#22c55e;--tl-yellow:#eab308;--tl-orange:#fb923c;--tl-red:#f43f5e;
+  --tl-ink:#111827;
+  --cal-empty:#243044;
+}
+html[data-theme="light"]{
+  --bg:#f4f6f8;--card:#ffffff;--card2:#eef2f6;--line:#d5dce4;--txt:#111827;--mut:#5b6773;
+  --acc:#2563eb;--ok:#16a34a;--bad:#e11d48;--warn:#d97706;--vio:#7c3aed;--shadow:0 8px 24px rgba(15,23,42,.08);
+  --bar:rgba(244,246,248,.94);
+  --tl-green:#15803d;--tl-yellow:#a16207;--tl-orange:#c2410c;--tl-red:#b91c1c;
+  --tl-ink:#ffffff;
+  --cal-empty:#e2e8f0;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html{max-width:100%;color-scheme:dark}
+html[data-theme="light"]{color-scheme:light}
+body{margin:0;background:var(--bg);color:var(--txt);font:14px/1.45 Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;max-width:100%;font-feature-settings:"tnum" 1}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+h1{font-size:20px;margin:0;font-weight:700;letter-spacing:-.02em}
+h2{font-size:15px;margin:0 0 10px;display:flex;align-items:center;gap:8px;font-weight:650}
+h3{font-size:13px;margin:12px 0 6px;color:var(--txt);text-transform:none;letter-spacing:0;font-weight:650}
+.sub{color:var(--mut);font-size:12px}
+.bar{position:sticky;top:0;z-index:20;height:64px;max-height:64px;background:var(--bar);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding:0 16px;display:flex;flex-direction:row;flex-wrap:nowrap;align-items:center;gap:10px;max-width:100%;min-width:0}
+.bar-head{display:flex;align-items:center;min-width:0;flex:0 1 auto;gap:8px}
+.dash-av{flex:0 0 40px;width:40px;height:40px;border-radius:50%;overflow:hidden;background:var(--acc);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;line-height:1}
+.dash-av[hidden]{display:none!important}
+.dash-av img,.pcard-av img{width:100%;height:100%;object-fit:cover;display:block}
+.brand{min-width:0;max-width:14rem}
+.brand-title{display:flex;align-items:center;gap:6px;min-width:0;flex-wrap:nowrap}
+.brand-title h1{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.demo-badge{flex:0 0 auto;display:inline-block;padding:1px 7px;border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.01em;line-height:1.35;background:var(--warn);color:#111}
+.demo-badge[hidden]{display:none!important}
+.demo-strip{display:none;text-align:center;font-size:11px;font-weight:700;padding:4px 10px;background:var(--warn);color:#111;letter-spacing:.01em}
+.demo-strip[hidden]{display:none!important}
+.brand #acct{display:block;font-size:12px;line-height:1.2;margin-top:1px}
+.brand #genline{display:none}
+.bar-tools{display:flex;flex-wrap:nowrap;align-items:center;gap:8px;flex:0 0 auto}
+.bar-row{display:flex;flex-wrap:nowrap;gap:8px;align-items:center;min-width:0;flex:1 1 auto}
+.bar-presets{display:flex;flex-wrap:nowrap;gap:6px;align-items:center;min-width:0}
+.bar-presets button{white-space:nowrap}
+.p-short{display:none}.p-full{display:inline}
+.bar-custom{background:transparent;border:none;border-radius:0;padding:0;margin:0;display:flex;align-items:center;flex-wrap:nowrap;gap:8px;min-width:0;max-width:none;position:relative}
+.bar-custom>summary{display:flex;align-items:center;list-style:none;cursor:pointer;background:var(--card2);color:var(--txt);border:1px solid var(--line);border-radius:999px;padding:5px 12px;font:inherit;font-weight:600}
+.bar-custom>summary::-webkit-details-marker{display:none}
+.bar-custom[open]>summary,.bar-custom.on>summary{background:var(--acc);border-color:var(--acc);color:#fff}
+.bar-custom .custom-range{display:none}
+.bar-custom[open] .custom-range{display:flex;flex-wrap:nowrap;gap:8px;align-items:center;position:absolute;top:40px;right:0;z-index:8;padding:10px;background:var(--bar);border:1px solid var(--line);border-radius:10px}
+.bar button{background:var(--card2);color:var(--txt);border:1px solid var(--line);border-radius:999px;padding:5px 12px;cursor:pointer;font:inherit}
+.bar button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.bar button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.bar input[type=date],#roi-q,#top-q{background:var(--card2);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:5px 8px;font:inherit;color-scheme:dark;min-width:0;max-width:100%}
+html[data-theme="light"] .bar input[type=date],html[data-theme="light"] #roi-q,html[data-theme="light"] #top-q{color-scheme:light}
+.bar input[type=date]{width:11rem;flex:0 0 11rem}
+.custom-range{display:flex;flex-wrap:nowrap;gap:8px;align-items:center;min-width:0;flex:0 1 auto}
+.tog{display:inline-flex;align-items:center;gap:6px;color:var(--mut);font-size:12px;font-weight:600;white-space:nowrap;flex-wrap:wrap}
+.tog:has(input:disabled){opacity:.7;cursor:not-allowed}
+.tog input:disabled{cursor:not-allowed}
+.cmp-hint{display:none;color:var(--mut);font-size:11px;font-weight:500}
+.cmp-hint.is-on{display:inline}
+#more-btn{display:none}
+.bar-tools.more-panel{display:flex}
+tr.roi-low{background:rgba(244,63,94,.08)}
+tr.roi-top{background:rgba(34,197,94,.08)}
+.bar .per{display:inline;margin-left:8px;color:var(--mut);font-size:11px;font-weight:600;white-space:nowrap}
+.shown-range{display:none;color:var(--mut);font-size:11px;font-weight:600;white-space:nowrap}
+nav{display:none;padding:6px 22px;flex-wrap:wrap;gap:10px;font-size:12px;min-width:0}
+main.dash,main{padding:12px 16px 24px;display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:12px;max-width:1440px;min-width:0;width:100%;margin:0 auto;overflow-x:hidden}
+section{grid-column:span 12;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;min-width:0;max-width:100%;overflow-x:auto;box-shadow:var(--shadow)}
+#s1{padding:10px 12px}
+#s7{display:none}
+@media (min-width:960px){
+  #s2{grid-column:span 7}#s4{grid-column:span 5}#s3,#s5,#sr{grid-column:span 4}#hp,#hr{grid-column:span 6}
+}
+.kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin:0}
+.cons-panel{display:grid;grid-template-columns:minmax(160px,220px) minmax(0,1fr);gap:14px;margin-top:12px;align-items:start;min-width:0}
+.cons-panel .kpi{height:auto}
+.cons-visual{display:grid;grid-template-columns:max-content minmax(140px,1fr);gap:12px 18px;align-items:start;min-width:0}
+.kpi{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:10px 10px 8px;min-width:0;box-shadow:var(--shadow)}
+.kpi-tl{border-left-width:4px}
+.tl-green,.kpi-tl.tl-green{--tl:var(--tl-green)}
+.tl-yellow,.kpi-tl.tl-yellow{--tl:var(--tl-yellow)}
+.tl-orange,.kpi-tl.tl-orange{--tl:var(--tl-orange)}
+.tl-red,.kpi-tl.tl-red{--tl:var(--tl-red)}
+.kpi-tl{border-left-color:var(--tl)}
+.delta.tl-green{color:var(--tl-green)}.delta.tl-yellow{color:var(--tl-yellow)}.delta.tl-orange{color:var(--tl-orange)}.delta.tl-red{color:var(--tl-red)}
+.tl-legend{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin:8px 0 0;font-size:11px;color:var(--mut)}
+.tl-legend i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.cal-wrap{margin:0;min-width:0;width:max-content;max-width:100%;overflow-x:auto;--cal-n:10;--cal-gap:4px;--cal-wd:36px;--cal-sz:22px}
+.cal-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+.cal-grid-wrap{display:grid;grid-template-columns:var(--cal-wd) max-content;grid-template-rows:auto auto;gap:4px 8px;width:max-content;max-width:100%;min-width:0}
+.cal-months{grid-column:2;grid-row:1;display:grid;grid-auto-flow:column;grid-auto-columns:var(--cal-sz);gap:var(--cal-gap);color:var(--mut);font-size:11px;font-weight:600;line-height:1.2}
+.cal-mon{display:block;overflow:visible;white-space:nowrap;min-width:0}
+.cal-wd{grid-column:1;grid-row:2;display:grid;grid-template-rows:repeat(7,var(--cal-sz));gap:var(--cal-gap);color:var(--mut);font-size:11px;line-height:var(--cal-sz);width:var(--cal-wd)}
+.cal-grid{grid-column:2;grid-row:2;display:grid;grid-template-rows:repeat(7,var(--cal-sz));grid-auto-flow:column;grid-auto-columns:var(--cal-sz);gap:var(--cal-gap);width:max-content;max-width:100%}
+.cal-cell{width:var(--cal-sz);height:var(--cal-sz);min-width:0;border-radius:4px;background:var(--cal-empty);box-sizing:border-box}
+.cal-cell.tl-green,.dscore-cell.tl-green{background:var(--tl-green)}.cal-cell.tl-yellow,.dscore-cell.tl-yellow{background:var(--tl-yellow)}.cal-cell.tl-orange,.dscore-cell.tl-orange{background:var(--tl-orange)}.cal-cell.tl-red,.dscore-cell.tl-red{background:var(--tl-red)}
+.cal-cell.is-incomplete,.dscore-cell.is-incomplete{background:var(--cal-empty);box-shadow:none}
+.cal-cell.is-out{opacity:.34}
+.cal-cell.is-in-range{box-shadow:inset 0 0 0 1px rgba(232,238,243,.55);opacity:1}
+html[data-theme="light"] .cal-cell.is-in-range{box-shadow:inset 0 0 0 1px rgba(17,24,39,.35)}
+.wd-sum{min-width:0}
+.wd-sum h3{margin:0 0 8px}
+.wd-row{display:grid;grid-template-columns:2.2rem minmax(0,1fr) 2.1rem;gap:6px;align-items:center;margin:3px 0;font-size:11px;color:var(--mut)}
+.wd-bar{height:8px;background:var(--cal-empty);border-radius:4px;overflow:hidden}
+.wd-bar i{display:block;height:100%;border-radius:4px;background:var(--tl,var(--line));max-width:100%}
+.wd-n{text-align:right;font-variant-numeric:tabular-nums}
+.dscore{margin-top:6px;min-width:0}
+.dscore-row{display:flex;gap:2px;padding:0 14px 0 36px}
+.dscore-cell{flex:1 1 0;height:6px;border-radius:2px;background:var(--cal-empty);min-width:0}
+.dscore-leg{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin-top:4px;font-size:11px;color:var(--mut)}
+.dscore-leg i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+.post-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 10px}
+.post-split{display:grid;grid-template-columns:1fr;gap:16px;min-width:0}
+.post-split .post-grid{grid-template-columns:1fr}
+.split-h{font-size:13px;margin:0 0 10px;color:var(--txt);font-weight:650}
+.ptabs{display:flex;flex-wrap:wrap;gap:6px}
+.ptabs button{background:var(--card2);color:var(--txt);border:1px solid var(--line);border-radius:999px;padding:4px 10px;cursor:pointer;font:inherit;font-size:12px;font-weight:600}
+.ptabs button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.post-grid{display:grid;grid-template-columns:1fr;gap:10px;min-width:0}
+.pcard{position:relative;background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:12px 12px 10px;min-width:0;box-shadow:var(--shadow);border-left:4px solid var(--tl,var(--line))}
+.pcard-hit{display:block;color:inherit;text-decoration:none;min-width:0}
+.pcard-hit:hover{text-decoration:none}
+.pcard-hd{display:flex;align-items:flex-start;gap:8px;min-width:0}
+.pcard-av{flex:0 0 40px;width:40px;height:40px;border-radius:50%;overflow:hidden;background:var(--acc);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px}
+.pcard-who{min-width:0;flex:1 1 auto}
+.pcard-name{font-weight:700;font-size:13px;line-height:1.2}
+.pcard-handle,.pcard .top-meta{color:var(--mut);font-size:12px;white-space:normal;overflow:visible}
+.pcard-badge{flex:0 0 auto;min-width:2.1rem;text-align:center;border-radius:999px;padding:2px 7px;font-size:12px;font-weight:700;color:var(--tl-ink);background:var(--tl)}
+.pcard-reply{color:var(--mut);font-size:12px;margin:6px 0 0}
+.pcard-text{margin:8px 0 0;font-size:14px;line-height:1.4;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:6;overflow:hidden;overflow-wrap:anywhere;white-space:pre-wrap}
+.pcard.is-open .pcard-text{-webkit-line-clamp:unset;display:block}
+.pcard-metrics{display:flex;flex-wrap:wrap;gap:8px 12px;margin-top:10px;color:var(--mut);font-size:12px;font-variant-numeric:tabular-nums}
+.pcard-more{margin-top:8px;background:transparent;border:0;color:var(--acc);cursor:pointer;font:inherit;font-size:12px;font-weight:600;padding:0}
+.card-more{margin-top:10px;background:var(--card2);color:var(--txt);border:1px solid var(--line);border-radius:999px;padding:6px 12px;cursor:pointer;font:inherit;font-weight:600}
+.kpi .v{font-size:clamp(18px,2.6vw,26px);font-weight:700;line-height:1.1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.kpi .k{color:var(--mut);font-size:10px;margin-top:4px;letter-spacing:.04em;text-transform:uppercase;overflow-wrap:anywhere}
+.kpi .delta,.kpi .streak{font-size:11px;font-weight:600;margin-top:3px;overflow-wrap:anywhere}
+.kpi .streak{color:var(--mut);font-weight:500}
+.kpi .delta .vs{color:var(--mut);font-weight:500;margin-left:4px}
+.kpi .spark{height:28px;margin-top:6px}
+.ww{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;min-width:0}
+.ww>div{min-width:0}
+.fold{background:transparent;border:1px dashed var(--line);padding:6px 10px;margin:8px 0;max-width:100%}
+.fold>summary{color:var(--mut);font-size:13px;font-weight:550;overflow-wrap:anywhere}
+.num{font-variant-numeric:tabular-nums}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(180px,100%),1fr));gap:10px;min-width:0}
+.card{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px;min-width:0}
+.card .k{color:var(--mut);font-size:12px}.card .v{font-size:24px;font-weight:650;margin-top:2px;font-variant-numeric:tabular-nums}.card .n{color:var(--mut);font-size:12px;margin-top:2px}
+.pos{color:var(--ok)}.neg{color:var(--bad)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{color:var(--mut);font-weight:600;white-space:nowrap;position:sticky;top:0;background:var(--card)}
+th[data-key]{cursor:pointer}th[data-key]:hover{color:var(--txt)}
+td.r,th.r{text-align:right}
+.tw{overflow:auto;max-height:360px;border:1px solid var(--line);border-radius:10px;max-width:100%;min-width:0;-webkit-overflow-scrolling:touch}
+.tw table{width:max-content;min-width:100%}
+.tw table th{background:var(--card2)}
+.tw.top-full table{width:100%;min-width:100%}
+.mini-top{overflow-x:hidden;max-width:100%}
+.mini-top table{width:100%;min-width:0;max-width:100%;table-layout:fixed}
+.mini-top col.rank{width:2rem}
+.mini-top col.metrics{width:7.5rem}
+.mini-top td.num{width:2rem;white-space:nowrap;padding-right:8px}
+.mini-top td.met{width:7.5rem;white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums}
+.mini-top td.txt{max-width:none;overflow:visible;white-space:normal;min-width:0}
+.mini-top .txt > a{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;max-width:100%}
+.mini-top .txt .note,.mini-top .top-meta{white-space:normal;overflow:visible;text-overflow:unset;max-width:100%;margin-top:4px}
+.top-metrics{display:none;white-space:nowrap}
+.table-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}
+.table-tools input{min-width:min(100%,16rem)}
+.pager{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:8px;color:var(--mut);font-size:12px}
+.empty{padding:20px 12px;border:1px dashed var(--line);border-radius:12px;color:var(--mut);text-align:center}
+.note{color:var(--mut);font-size:12.5px;margin:6px 0}
+.warnbox{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.35);color:var(--warn);border-radius:10px;padding:10px 12px;font-size:13px;margin:8px 0}
+.formula{background:var(--card2);border-left:3px solid var(--acc);padding:10px 12px;border-radius:6px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;margin:6px 0 12px;overflow-x:auto;max-width:100%}
+.pill{display:inline-block;border-radius:999px;padding:1px 8px;font-size:11.5px;border:1px solid var(--line);white-space:nowrap}
+.p-ok{color:var(--ok);border-color:rgba(34,197,94,.4)}.p-bad{color:var(--bad);border-color:rgba(244,63,94,.4)}
+.p-warn{color:var(--warn);border-color:rgba(245,158,11,.4)}.p-mut{color:var(--mut)}.p-vio{color:var(--vio);border-color:rgba(167,139,250,.4)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(420px,100%),1fr));gap:12px;min-width:0}
+.grid2>*{min-width:0;max-width:100%}
+svg.ch{width:100%;max-width:100%;height:auto;display:block}
+.echart{width:100%;max-width:100%;min-width:0;height:220px;position:relative}
+.echart-spark{height:28px}
+.echart-heat{height:240px}
+.echart-hbar{height:auto;min-height:120px}
+.zoom-reset{display:none;position:absolute;top:6px;right:6px;z-index:4;width:28px;height:28px;padding:0;border-radius:8px;background:var(--card2);color:var(--txt);border:1px solid var(--line);cursor:pointer;font-size:14px;line-height:1}
+.echart.is-zoomed .zoom-reset{display:inline-flex;align-items:center;justify-content:center}
+.info{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;margin-left:6px;border-radius:50%;border:1px solid var(--line);color:var(--mut);font-size:10px;cursor:help;font-weight:700}
+svg .grid{stroke:var(--line);stroke-width:1}svg .ax{fill:var(--mut)}
+svg.ch .out-lab{font-weight:650}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--mut);margin-top:4px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+details{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:8px 12px;margin:8px 0;min-width:0;max-width:100%}
+.bar-custom{background:transparent;border:none;padding:0;margin:0}
+summary{cursor:pointer;font-weight:600}
+.txt{max-width:min(420px,55vw);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.best{background:rgba(59,130,246,.12)}
+select{background:var(--card2);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:5px 8px;font:inherit;max-width:100%}
+.log{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;white-space:pre-wrap;max-height:300px;overflow:auto;background:var(--card2);padding:10px;border-radius:8px}
+.log .w{color:var(--warn)}
+tr.lowdata{opacity:.55;color:var(--mut)}
+.disc{color:var(--mut);font-size:12.5px;margin:8px 0 12px}
+.hmwrap{overflow:auto;margin:4px 0 0;max-width:100%;min-width:0}
+.toplist{margin:4px 0 12px;padding-left:18px}
+.toplist li{margin:2px 0}
+h3{font-size:13px;margin:0 0 8px;color:var(--txt);text-transform:none;letter-spacing:0;font-weight:650}
+@media (max-width:640px){
+  .kpis{gap:8px;grid-template-columns:repeat(2,minmax(0,1fr))}
+  .cons-panel{grid-template-columns:1fr}
+  .cons-visual{grid-template-columns:1fr}
+  .cal-wrap{--cal-sz:16px;--cal-wd:28px;--cal-gap:3px;width:100%}
+  .cal-grid-wrap{width:100%;grid-template-columns:var(--cal-wd) minmax(0,1fr)}
+  .cal-grid{width:max-content}
+  .kpi{padding:8px 8px}
+  .kpi .v{font-size:clamp(18px,5vw,24px)}
+  header,main,nav,.bar,footer{padding-left:10px;padding-right:10px}
+  main.dash,main{grid-template-columns:1fr;gap:10px;padding-top:10px}
+  #s2,#s3,#s4,#s5,#sr,#hp,#hr,section{grid-column:span 1}
+  .grid2,.ww{grid-template-columns:1fr}
+  .bar{position:sticky;top:0;z-index:20;height:56px;max-height:56px;padding:0 10px;gap:6px}
+  .bar-label,.desk-only,.brand .sub,.p-full{display:none}
+  .bar-head{gap:6px}
+  .dash-av{flex:0 0 24px;width:24px;height:24px;font-size:11px}
+  .p-short{display:inline}
+  .brand{max-width:none;flex:0 1 auto}
+  .demo-badge{display:none!important}
+  .demo-strip:not([hidden]){display:block}
+  h1,.brand-title h1{font-size:12px;line-height:1.2;white-space:nowrap;overflow:visible;text-overflow:unset}
+  .bar-presets{display:flex;position:static;flex-wrap:nowrap;align-items:center;gap:1px;overflow-x:hidden;overflow-y:hidden;height:56px;max-height:56px;box-sizing:border-box;min-width:0;flex:1 1 auto;margin:0;padding:0;background:transparent;border:none}
+  .bar-presets button{flex:0 0 auto;padding:4px 5px;font-size:11px;white-space:nowrap}
+  .bar .per{display:none}
+  .bar-row{flex-wrap:nowrap;align-items:center;flex:1 1 auto;min-width:0}
+  .bar-custom{position:relative;flex:0 0 auto;height:56px;max-height:56px;overflow:visible;z-index:6;flex-wrap:nowrap;gap:3px}
+  .bar-custom>summary{display:flex;align-items:center;list-style:none;cursor:pointer;height:auto;padding:4px 6px;font-size:11px;white-space:nowrap}
+  .bar-custom>summary::-webkit-details-marker{display:none}
+  .bar-custom .custom-range{display:none}
+  .bar-custom[open] .custom-range{display:flex;position:absolute;top:56px;right:0;left:auto;min-width:min(100vw,22rem);max-width:calc(100vw - 20px);flex-wrap:wrap;gap:8px;padding:10px;background:var(--bar);border:1px solid var(--line);border-radius:0 0 10px 10px;z-index:6}
+  .custom-range{flex-wrap:wrap;flex:1 1 100%}
+  .bar input[type=date]{width:auto;flex:1 1 8.5rem;max-width:100%;min-width:0}
+  #more-btn{display:flex;align-items:center;padding:6px 8px}
+  .bar-tools{display:none;position:absolute;top:56px;right:10px;z-index:30;background:var(--bar);border:1px solid var(--line);border-radius:10px;padding:10px;gap:8px;flex-direction:column;min-width:12rem}
+  .bar-tools.open{display:flex}
+  .shown-range{display:block}
+  .card .v{font-size:20px}
+  table{font-size:12px}
+  th,td{padding:6px 6px}
+  .cards{grid-template-columns:repeat(auto-fill,minmax(min(148px,100%),1fr))}
+  .tw{max-height:70vh}
+  section{padding:10px}
+  .txt{max-width:11rem}
+  .mini-top .txt{max-width:none}
+  .top-metrics{display:inline;white-space:nowrap}
+  .mini-top col.metrics,.mini-top td.met,.mini-top .mini-top-metric{display:none}
+  .mini-top td.num:first-child{width:1.6rem}
+  .post-grid{grid-template-columns:1fr}
+  .echart{height:200px}
+  .echart-heat{height:220px}
+  .top-full th.c-extra,.top-full td.c-extra{display:none}
+  .top-full .c-time{display:none}
+  .top-full td.txt a{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .top-full.tw{overflow-x:hidden}
+}
+@media (min-width:720px){
+  .post-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .post-split{grid-template-columns:1fr 1fr;grid-template-rows:auto repeat(var(--split-n, 3), auto);align-items:stretch}
+  .post-split .post-col{display:grid;grid-template-rows:subgrid;grid-row:1/-1;min-width:0}
+  .post-split .post-grid{display:contents;grid-template-columns:unset}
+  .post-split .pcard{height:100%}
+  .post-split .split-h{margin:0}
+}
+@media (min-width:1100px){
+  .post-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .post-split .post-grid{display:contents}
+  .cal-wrap{--cal-gap:5px;--cal-wd:40px;--cal-sz:28px}
+  .cal-grid-wrap{gap:6px 10px}
+  .cal-months{font-size:12px}
+  .cal-wd{font-size:12px}
+  .cal-cell{border-radius:5px}
+}
+@media (max-width:1100px) and (min-width:641px){
+  .kpis{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .bar-label,.p-full{display:none}
+  .p-short{display:inline}
+  .bar-presets button,.bar-custom>summary{white-space:nowrap}
+  .brand{max-width:11rem}
+}
+footer{display:none;padding:16px 22px 32px;color:var(--mut);font-size:13px;border-top:1px solid var(--line);min-width:0;max-width:100%}
+
+</style>
+</head>
+<body>
+<div class="bar" id="filterbar">
+  <div class="bar-head">
+    <span id="dash-av" class="dash-av" hidden></span>
+    <div class="brand">
+      <div class="brand-title">
+        <h1 id="dash-title">X growth dashboard</h1>
+        <span id="demo-badge" class="demo-badge" hidden>Demo data</span>
+      </div>
+      <div class="sub" id="acct"></div>
+      <div class="sub" id="genline"></div>
+    </div>
+  </div>
+  <div class="bar-row">
+    <span class="sub bar-label">Period:</span>
+    <div class="bar-presets" role="group" aria-label="Period">
+      <button type="button" data-p="7" aria-pressed="false"><span class="p-full">7 days</span><span class="p-short">7d</span></button>
+      <button type="button" data-p="30" aria-pressed="false"><span class="p-full">30 days</span><span class="p-short">30d</span></button>
+      <button type="button" data-p="90" aria-pressed="false"><span class="p-full">90 days</span><span class="p-short">90d</span></button>
+      <button type="button" data-p="all" aria-pressed="false"><span class="p-full">All</span><span class="p-short">All</span></button>
+    </div>
+    <details class="bar-custom">
+      <summary><span class="p-full">Custom</span><span class="p-short">Custom</span></summary>
+      <span class="custom-range">
+        <span class="sub">or custom period:</span>
+        <input type="date" id="fs"> <span class="sub">to</span> <input type="date" id="fe"> <button type="button" id="fapply">Apply</button>
+      </span>
+    </details>
+    <span class="per" id="perlabel"></span>
+  </div>
+  <div class="bar-tools" id="bar-tools">
+    <label class="tog"><input type="checkbox" id="cmp-prev" checked> Compare previous <span class="cmp-hint" id="cmp-hint">Not enough history</span></label>
+    <span class="shown-range" id="shown-range"></span>
+    <button type="button" id="theme-toggle" aria-label="Theme">Light</button>
+  </div>
+  <button type="button" id="more-btn" aria-label="More" aria-expanded="false">⋯</button>
+</div>
+<div id="demo-strip" class="demo-strip" hidden>Demo data</div>
+<nav>
+  <a href="#s1" data-nav="overview">Overview</a><a href="#s2" data-nav="followers">Followers</a><a href="#s3" data-nav="posts">Posts</a><a href="#s4" data-nav="engagement">Engagement</a>
+  <a href="#s5" data-nav="replies">Replies</a><a href="#s6" data-nav="patterns">Top posts</a>
+  <a href="#s8" data-nav="best">What works best</a><a href="#s7" data-nav="sources">Sources</a>
+</nav>
+<main class="dash">
+  <section id="s1"></section>
+  <section id="s2"></section>
+  <section id="s4"></section>
+  <section id="s3"></section>
+  <section id="s5"></section>
+  <section id="sr"></section>
+  <section id="hp"></section>
+  <section id="hr"></section>
+  <section id="s8"></section>
+  <section id="s6"></section>
+  <section id="s7" hidden></section>
+</main>
+<footer id="dash-footer" hidden></footer>
+<script type="application/json" id="dash-data">/*__DATA__*/{}</script>
+<script>
+(function(){
+"use strict";
+window.__xdashErrors=[];
+window.addEventListener('error',e=>{try{window.__xdashErrors.push(String((e&&e.message)||e));}catch(err){}});
+const D = JSON.parse(document.getElementById('dash-data').textContent || '{}');
+const META = D.meta || {}; const TODAY = META.today;
+const F = D.followers || {snapshots:[],new:[],lost:[],unavailable:[],not_following_back:null};
+const POSTS = D.posts || [];
+const REPLY_BUCKETS = D.reply_buckets || [];
+const ACC = META.account || '';
+const DISPLAY = META.display_name || '';
+const REPO = META.repo_url || '';
+const IS_PUBLIC = META.mode === 'public';
+const IS_DEMO = META.demo === true;
+const LANG = 'en';
+const STRINGS = {
+  en: {title:'X growth dashboard', genericTitle:'X growth dashboard', overview:'Overview', followers:'Followers', posts:'Posts', engagement:'Engagement', replies:'Replies', patterns:'Top posts', best:'What works best', sources:'Sources', footer:'Built with x-growth-assistant', generated:'Generated'}
+};
+const STR = STRINGS.en;
+const NF = new Intl.NumberFormat('en-US');
+const NF1 = new Intl.NumberFormat('en-US',{maximumFractionDigits:1});
+const fN = v => (v==null||!isFinite(v)) ? '—' : NF.format(v);
+const f1 = v => (v==null||!isFinite(v)) ? '—' : NF1.format(v);
+const fP = v => (v==null||!isFinite(v)) ? '—' : (v*100).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'%';
+const sgn = v => v==null ? '—' : (v>0?'+':'')+NF.format(v);
+const cls = v => v>0?'pos':(v<0?'neg':'');
+const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const EMPTY = '<div class="empty">No data</div>';
+const emptyMsg = m => m ? `<div class="empty">${esc(m)}</div>` : EMPTY;
+const WD = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const WDL = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+function addDays(s,n){const d=new Date(s+'T00:00:00Z');d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10);}
+function dayList(a,b){const r=[];if(!a||!b||a>b)return r;let d=a;while(d<=b&&r.length<5000){r.push(d);d=addDays(d,1);}return r;}
+function wdOf(s){return (new Date(s+'T00:00:00Z').getUTCDay()+6)%7;}
+const MONS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function fD(s){return s? `${MONS[+s.slice(5,7)-1]} ${+s.slice(8,10)}, ${s.slice(0,4)}` : '—';}
+function fDs(s){return `${MONS[+s.slice(5,7)-1]} ${+s.slice(8,10)}`;}
+function hl(h){return h?`<a href="https://x.com/${encodeURIComponent(h)}" target="_blank" rel="noopener">@${esc(h)}</a>`:'—';}
+function isoWeek(s){const d=new Date(s+'T00:00:00Z');const day=(d.getUTCDay()+6)%7;d.setUTCDate(d.getUTCDate()-day+3);const y=d.getUTCFullYear();const j4=new Date(Date.UTC(y,0,4));const w=1+Math.round(((d-j4)/864e5-3+((j4.getUTCDay()+6)%7))/7);return y+'-W'+String(w).padStart(2,'0');}
+const MON=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const sum=(a,k)=>a.reduce((t,p)=>t+(p[k]||0),0);
+const has=(a,k)=>a.some(p=>p[k]!=null);
+function mean(arr){const a=arr.filter(v=>v!=null&&isFinite(v));return a.length?a.reduce((t,v)=>t+v,0)/a.length:null;}
+function med(arr){const a=arr.filter(v=>v!=null&&isFinite(v)).slice().sort((x,y)=>x-y);if(!a.length)return null;const m=Math.floor(a.length/2);return a.length%2?a[m]:(a[m-1]+a[m])/2;}
+function weekLbl(w){const m=String(w).match(/W(\d+)/);return m?'W'+m[1]:String(w);}
+function isoWeeks(a,b){const out=[];for(const d of dayList(a,b)){const w=isoWeek(d);if(!out.length||out[out.length-1]!==w)out.push(w);}return out;}
+function dateDiffDays(a,b){return Math.round((Date.parse(b+'T00:00:00Z')-Date.parse(a+'T00:00:00Z'))/864e5);}
+function erOf(a){let e=0,i=0;for(const p of a){if(p.impressions>0&&p.eng_used!=null){e+=p.eng_used;i+=p.impressions;}}return i>0?e/i:null;}
+function erCell(v,r){if(v==null)return '—';const x=r.er_source==='x';return fP(v)+` <span class="pill ${x?'p-ok':'p-mut'}" style="font-size:10px;padding:0 5px" title="${x?'X engagements / impressions':'Calculated: (likes+replies+reposts+quotes+bookmarks+profile visits+link clicks) / impressions'}">${x?'X':'c'}</span>`;}
+const TYPE_NL={post:'post',reply:'reply',repost:'repost',quote:'quote'};
+const TYPE_PL={post:'posts',reply:'replies',repost:'reposts',quote:'quotes'};
+const MEDIA_NL={text:'text',image:'image',video:'video',thread:'thread'};
+const MK_NL={text:'text only',image:'image',multi_image:'multiple images',video:'video',gif:'GIF',poll:'poll',link:'link',article:'article',thread:'thread',unknown:'unknown'};
+const KIND_NL={post:'post',reply:'reply',quote:'quote',repost:'repost',thread:'thread'};
+const LEN_NL={short:'short (< 80)',medium:'medium (80–200)',long:'long (201–280)',long_form:'long-form (> 280)'};
+const DP_NL={night:'night (00–05)',morning:'morning (06–11)',afternoon:'afternoon (12–17)',evening:'evening (18–23)'};
+const SPEED_NL={'15m':'within 15 min','1h':'within 1 hour','4h':'within 4 hours',later:'later'};
+const HASH_NL={'0':'no hashtag','1-2':'1–2 hashtags','3+':'3+ hashtags'};
+const LINE_NL={single:'one block',multi:'multiple lines'};
+const IC=META.insights||{};
+const MINN=IC.min_n||5;
+const ROI=META.roi||{};
+const LOW_ROI_N=ROI.low_min_replies||5;
+const LOW_ROI_IMP=ROI.low_max_mean_impressions||30;
+const ROI_TOP_N=ROI.top_min_replies||3;
+const mediaNL=m=>m?MEDIA_NL[m]||m:'unknown';
+const pill=(t,c)=>`<span class="pill ${c||'p-mut'}">${esc(t)}</span>`;
+const yn=(v,why,basis)=>v===true?pill('yes','p-ok'):v===false?pill('no','p-bad'):why==='lijst_onvolledig'?`<span class="pill p-warn" title="Not in the (incomplete) following list of ${basis?fD(basis):'?'} — may be missing data">unknown (list incomplete)</span>`:`<span class="pill p-mut" title="No following list available">unknown</span>`;
+function followCaveat(){if(!F.latest_following_date||F.latest_following_complete)return '';const l=F.latest_following_loaded,t=F.latest_following_profile;return `<div class="warnbox">Following list incomplete: ${fN(l)} of ${t!=null?fN(t):'?'} loaded (snapshot ${fD(F.latest_following_date)}). If an account is not in the list, "still following?" is <b>unknown (list incomplete)</b> — not "no".</div>`;}
+
+const state={preset:'30',start:null,end:null,streakReplies:false,engType:'nonrepost',roiQ:'',compare:true,hlDay:null,topQ:'',topPage:0,cardTab:'top',cardLimit:6,cardOpen:{}};
+const SCORE={viewsW:0.4,engW:0.6,w:{likes:1,bookmarks:2,reposts:3,quotes:3,replies:4},lookbackDays:90,dayPostW:0.4,dayReplyW:0.6,streakMin:0.8,lights:{green:75,yellow:50,orange:25},deltaGreen:0.10,deltaYellow:-0.10,deltaOrange:-0.25,postsGoalDefault:2,repliesGoalDefault:10};
+function scoreGoals(){const g=(typeof META!=='undefined'&&META.goal)||{};const p=g.posts_per_day,r=g.replies_per_day;return {posts:(p!=null&&p>0)?+p:SCORE.postsGoalDefault,replies:(r!=null&&r>0)?+r:SCORE.repliesGoalDefault};}
+function messageKind(p){return (p&&p.type==='reply')?'reply':'post';}
+function weightedEng(p,w){w=w||SCORE.w;if(!p)return 0;return (p.likes||0)*w.likes+(p.bookmarks||0)*w.bookmarks+(p.reposts||0)*w.reposts+(p.quotes||0)*w.quotes+(p.replies||0)*w.replies;}
+function percentileRank(val,values){const a=(values||[]).filter(v=>v!=null&&isFinite(v));if(!a.length||val==null||!isFinite(val))return 0;let lt=0,eq=0;for(const v of a){if(v<val)lt++;else if(v===val)eq++;}return (lt+0.5*eq)/a.length;}
+function valueScore(p,peers){if(!p)return 0;const kind=messageKind(p);const pool=(peers||[]).filter(x=>messageKind(x)===kind);const set=pool.some(x=>x===p||(p.id!=null&&x&&x.id===p.id))?pool:pool.concat([p]);const vr=percentileRank(p.impressions||0,set.map(x=>x.impressions||0));const er=percentileRank(weightedEng(p),set.map(x=>weightedEng(x)));return (SCORE.viewsW*vr+SCORE.engW*er)*100;}
+function valueLookbackStart(today){return addDays(today||TODAY,-(SCORE.lookbackDays-1));}
+function scoredPosts(){const lo=valueLookbackStart(TODAY);const byKind={post:[],reply:[]};for(const p of POSTS){if(!p||p.type==='repost')continue;if(p.local_date&&p.local_date>=lo)byKind[messageKind(p)].push(p);}const out=new Map();for(const p of POSTS){if(!p||p.type==='repost')continue;const kind=messageKind(p);const peers=byKind[kind]||[];out.set(p.id,valueScore(p,peers));}return out;}
+function dayActivity(d,posts){const a=(posts||POSTS).filter(p=>p.local_date===d);return {posts:a.filter(p=>p.type==='post'||p.type==='quote').length,replies:a.filter(p=>p.type==='reply').length};}
+function dayScore(d,posts,goals){goals=goals||scoreGoals();const a=dayActivity(d,posts);return SCORE.dayPostW*Math.min(1,a.posts/Math.max(1,goals.posts))+SCORE.dayReplyW*Math.min(1,a.replies/Math.max(1,goals.replies));}
+function consistencyScore(days,posts,goals){const ds=(days||[]).map(d=>dayScore(d,posts,goals));if(!ds.length)return null;return ds.reduce((t,v)=>t+v,0)/ds.length*100;}
+function currentStreak(days,posts,goals){const a=(days||[]).slice();let n=0;for(let i=a.length-1;i>=0;i--){if(dayScore(a[i],posts,goals)+1e-12>=SCORE.streakMin)n++;else break;}return n;}
+function trafficLightScore(v){if(!(v>=0)&&!(v<0))return 'red';if(v>=SCORE.lights.green)return 'green';if(v>=SCORE.lights.yellow)return 'yellow';if(v>=SCORE.lights.orange)return 'orange';return 'red';}
+function trafficLightDelta(pct){if(pct==null||!isFinite(pct))return '';if(pct>=SCORE.deltaGreen)return 'green';if(pct>=SCORE.deltaYellow)return 'yellow';if(pct>=SCORE.deltaOrange)return 'orange';return 'red';}
+function tlHex(tone){const light=(typeof document!=='undefined'&&document.documentElement&&document.documentElement.getAttribute('data-theme')==='light');const m=light?{green:'#15803d',yellow:'#a16207',orange:'#c2410c',red:'#b91c1c'}:{green:'#22c55e',yellow:'#eab308',orange:'#fb923c',red:'#f43f5e'};return m[tone]||m.yellow;}
+function postPermalink(p){if(p&&p.url)return p.url;const id=p&&p.id;if(!id)return 'https://x.com/home';return ACC?`https://x.com/${ACC}/status/${id}`:`https://x.com/i/web/status/${id}`;}
+function replyLine(p){if(!p||p.type!=='reply')return '';if(IS_PUBLIC||!p.in_reply_to_handle)return 'Replying to a post';return 'Replying to @'+p.in_reply_to_handle;}
+function valueFormulaTip(){return 'Value score (0–100): '+Math.round(SCORE.viewsW*100)+'% × percentile rank of views + '+Math.round(SCORE.engW*100)+'% × percentile rank of weighted engagements, vs the same type (posts vs replies) in the last '+SCORE.lookbackDays+' days. Weighted engagements = likes×'+SCORE.w.likes+' + bookmarks×'+SCORE.w.bookmarks+' + reposts×'+SCORE.w.reposts+' + quotes×'+SCORE.w.quotes+' + replies received×'+SCORE.w.replies+'.';}
+function consistencyFormulaTip(){const g=scoreGoals();return 'Day score = '+SCORE.dayPostW+' × min(1, posts/'+g.posts+') + '+SCORE.dayReplyW+' × min(1, replies/'+g.replies+'). Consistency is the average day score in this period × 100. Streak = consecutive complete days with day score ≥ '+SCORE.streakMin+', counted through the last complete day and not clipped by the selected period. Incomplete days (after the last data date, and today) are excluded from activity scores, sparklines, and deltas. Follower counts use the latest snapshot (point-in-time), including today.';}
+function lastDataDate(){let m='';const snaps=(typeof F!=='undefined'&&F&&F.snapshots)||[];for(const s of snaps){if(s&&s.date&&(!m||s.date>m))m=s.date;}const posts=(typeof POSTS!=='undefined'&&POSTS)||[];for(const p of posts){if(p&&p.local_date&&(!m||p.local_date>m))m=p.local_date;}return m||'';}
+function lastCompleteDay(){const last=lastDataDate();const yest=addDays(TODAY,-1);if(!last)return yest;return last<yest?last:yest;}
+function isIncompleteDay(d){return !d||d>lastCompleteDay();}
+function completeDays(days){return (days||[]).filter(d=>!isIncompleteDay(d));}
+const CAL_WEEKS_MAX=10;
+function kpiCompleteRange(start,end){
+  const cap=lastCompleteDay();
+  const a=start||state.start,b=end||state.end;
+  if(!a||!b)return {start:null,end:null,days:[]};
+  const hi=(cap&&b>cap)?cap:b;
+  if(!hi||a>hi)return {start:a,end:hi,days:[]};
+  return {start:a,end:hi,days:completeDays(dayList(a,hi))};
+}
+function streakDays(){
+  const cap=lastCompleteDay();
+  if(!cap)return [];
+  const lo=minDataDate()||addDays(cap,-400);
+  return completeDays(dayList(lo,cap));
+}
+function calendarDays(){
+  const maxW=CAL_WEEKS_MAX;
+  const mondayThis=addDays(TODAY,-wdOf(TODAY));
+  const sunday=addDays(mondayThis,6);
+  const fromMax=addDays(mondayThis,-(maxW-1)*7);
+  const first=minDataDate();
+  let start=fromMax;
+  if(first){
+    const dataMonday=addDays(first,-wdOf(first));
+    if(dataMonday>start) start=dataMonday;
+  }
+  if(start>mondayThis) start=mondayThis;
+  return dayList(start,sunday);
+}
+function pluralize(n,one,many){const v=Number(n);const count=(n==null||!isFinite(v))?0:v;if(many!=null&&many!=='')return count===1?one:many;const irreg={reply:'replies',day:'days',view:'views',like:'likes',repost:'reposts',bookmark:'bookmarks',post:'posts',quote:'quotes'};return count===1?one:(irreg[one]||(one+'s'));}
+const inR=d=>d>=state.start&&d<=state.end;
+const refDay=()=> state.end<TODAY?state.end:TODAY;
+
+function minDataDate(){let m=TODAY;for(const s of F.snapshots)if(s.date<m)m=s.date;for(const p of POSTS)if(p.local_date<m)m=p.local_date;return m;}
+function firstFollowerDate(){const a=snapsWithFc();return a.length?a[0].date:null;}
+function followerDays(){const first=firstFollowerDate();const lo=(first&&state.start&&first>state.start)?first:state.start;return dayList(lo,state.end);}
+function chartDays(){const lo=minDataDate();const a=(lo&&state.start&&lo>state.start)?lo:state.start;return dayList(a,state.end);}
+function shownRangeLabel(){const days=chartDays();const a=days[0]||state.start,b=days[days.length-1]||state.end;return {start:a,end:b,n:days.length,text:`${fDs(a)} – ${fDs(b)}`};}
+function forecastHorizon(actualDays){const maxByShare=Math.max(0,Math.floor((actualDays||0)*0.35/0.65));return Math.max(0,Math.min(30,maxByShare));}
+function prevPointCount(vals){return Object.values(vals||{}).filter(v=>v!=null&&isFinite(v)).length;}
+function heatRange(vals){const a=(vals||[]).filter(v=>v!=null&&isFinite(v));if(!a.length)return {min:0,max:1};const mn=Math.min(...a),mx=Math.max(...a);return {min:mn,max:mn===mx?(mn===0?1:mx):mx};}
+function stdev(arr){const a=(arr||[]).filter(v=>v!=null&&isFinite(v));if(a.length<2)return 0;const m=a.reduce((t,v)=>t+v,0)/a.length;const varr=a.reduce((t,x)=>t+(x-m)*(x-m),0)/(a.length-1);return Math.sqrt(varr);}
+function dailyChanges(snaps){const a=(snaps||[]).filter(s=>s&&s.followers_count!=null).slice().sort((x,y)=>x.date<y.date?-1:x.date>y.date?1:0);const ch=[];for(let i=1;i<a.length;i++){const d=dateDiffDays(a[i-1].date,a[i].date);if(d>0)ch.push((a[i].followers_count-a[i-1].followers_count)/d);}return ch;}
+function forecastBand(center,days,fromDate,curVal,stdDaily){const lo={},hi={};let width=0;const base=Math.abs(curVal!=null&&isFinite(curVal)?curVal:0);const floor=Math.max(base*0.01,1);const sd=stdDaily!=null&&isFinite(stdDaily)?Math.abs(stdDaily):0;(days||[]).forEach(d=>{const c=center&&center[d];if(c==null||!isFinite(c))return;if(fromDate&&d<fromDate)return;const ahead=fromDate?Math.max(0,dateDiffDays(fromDate,d)):0;const half=Math.max(floor,sd*Math.sqrt(ahead));lo[d]=c-half;hi[d]=c+half;width=Math.max(width,2*half);});return {lo,hi,width};}
+function outMarkStyle(data){return {symbol:'pin',symbolSize:20,symbolOffset:[0,8],itemStyle:{color:'#f59e0b'},label:{show:true,formatter:p=>fN((p.data&&p.data.value)!=null?p.data.value:p.value),color:'#111827',backgroundColor:'#f59e0b',borderRadius:4,padding:[2,5],fontSize:11,fontWeight:700,position:'top',distance:4},data:data||[]};}
+function clipPrevLine(vals,hi,days){const data=[],marks=[];(days||[]).forEach(d=>{const v=vals&&vals[d];if(v==null||!isFinite(v)){data.push({name:d,value:null});return;}if(hi!=null&&v>hi){data.push({name:d,value:hi,raw:v,clipped:true});marks.push({name:'out-mark',coord:[d,hi],xAxis:d,yAxis:hi,value:v});}else data.push({name:d,value:v});});return {data,marks};}
+function tipRaw(p){if(!p)return null;if(p.data&&p.data.raw!=null)return p.data.raw;return p.value;}
+function heatTheme(){return (typeof document!=='undefined'&&document.documentElement&&document.documentElement.getAttribute('data-theme')==='light')?'light':'dark';}
+function heatEmptyColor(){return heatTheme()==='light'?'#e2e8f0':'#243044';}
+function heatLowColor(){return heatTheme()==='light'?'#60a5fa':'#3b6ea8';}
+function heatColors(){return heatTheme()==='light'?['#60a5fa','#3b82f6','#2563eb','#1d4ed8','#1e3a8a']:['#3b6ea8','#3b82f6','#60a5fa','#93c5fd','#bfdbfe'];}
+function heatMapped(val,mn,mx){if(val==null||!isFinite(val))return null;const span=mx-mn;if(!(span>0))return 1;return Math.sqrt(Math.max(0,Math.min(1,(val-mn)/span)));}
+function hexLum(hex){let h=String(hex||'').replace('#','');if(h.length===3)h=h[0]+h[0]+h[1]+h[1]+h[2]+h[2];if(h.length<6)return 0;const r=parseInt(h.slice(0,2),16)/255,g=parseInt(h.slice(2,4),16)/255,b=parseInt(h.slice(4,6),16)/255;const lin=c=>c<=0.03928?c/12.92:Math.pow((c+0.055)/1.055,2.4);return 0.2126*lin(r)+0.7152*lin(g)+0.0722*lin(b);}
+function contrastRatio(a,b){const L1=hexLum(a),L2=hexLum(b);const hi=Math.max(L1,L2),lo=Math.min(L1,L2);return (hi+0.05)/(lo+0.05);}
+function ratesClose(a,b){if(a==null||b==null||!isFinite(a)||!isFinite(b))return false;const d=Math.abs(a-b);return d<1e-9||d<=Math.max(Math.abs(a),Math.abs(b),1)*1e-6;}
+function followersOn(date){const a=snapsWithFc();let prev=null,next=null;for(const s of a){if(s.date===date)return s.followers_count;if(s.date<date)prev=s;if(s.date>date&&!next)next=s;}if(prev&&next){const span=dateDiffDays(prev.date,next.date);if(span<=0)return prev.followers_count;return prev.followers_count+(next.followers_count-prev.followers_count)*dateDiffDays(prev.date,date)/span;}return null;}
+
+/* ---------- SVG charts ---------- */
+function niceStep(r,maxTicks){if(r<=0)return 1;const parts=Math.max(1,(maxTicks==null?5:maxTicks)-1);const raw=r/parts;const mag=Math.pow(10,Math.floor(Math.log10(raw)));const n=raw/mag;return (n<=1?1:n<=2?2:n<=3?3:n<=5?5:10)*mag;}
+function maxYTicks(plotPx,narrow){const n=Math.max(2,Math.floor(plotPx/(12+6)));return Math.min(narrow?3:5,n);}
+function nextNiceStep(st){if(!(st>0))return 1;const mag=Math.pow(10,Math.floor(Math.log10(st)+1e-12));const n=st/mag;if(n<=1)return 2*mag;if(n<=2)return 3*mag;if(n<=3)return 5*mag;if(n<=5)return 10*mag;return 20*mag;}
+function yTickVals(lo,hi,st,maxN){maxN=Math.max(2,maxN==null?5:maxN);let step=st>0?st:niceStep(hi-lo,maxN);const collect=s=>{const a=[];const start=Math.floor(lo/s)*s,end=Math.ceil(hi/s)*s,n=Math.max(0,Math.round((end-start)/s));for(let i=0;i<=n;i++)a.push(start+i*s);return a;};let vals=collect(step);for(let i=0;i<8&&vals.length>maxN;i++){step=nextNiceStep(step);vals=collect(step);}return vals.length?vals:[lo,hi];}
+function chartPlot(o,fallbackH){o=o||{};const displayW=o.w!=null?o.w:chartDisplayWidth(!!o.half);const iw=typeof innerWidth==='undefined'?displayW:innerWidth;const narrow=iw<=640;const fs=axFont(displayW);const T=Math.ceil(fs+12),B=Math.ceil(fs+16);const minPlotPx=o.half?120:(narrow?140:0);const minH=Math.ceil(minPlotPx*900/Math.max(displayW,160)+T+B);const H=Math.max(o.h||fallbackH||(o.half?180:220),minH);const plotPx=(H-T-B)*Math.max(displayW,160)/900;return {displayW,narrow,fs,T,B,H,plotPx,maxY:maxYTicks(plotPx,narrow)};}
+function axFmt(v,pct){if(v==null||!isFinite(v))return '0';if(pct)return (v*100).toLocaleString('en-US',{maximumFractionDigits:0})+'%';const av=Math.abs(v);if(av>=1000){const k=v/1000;return k.toLocaleString('en-US',{maximumFractionDigits:Math.abs(k)>=10?0:1})+'K';}return v.toLocaleString('en-US',{maximumFractionDigits:Number.isInteger(v)?0:1});}
+function compactN(v){if(v==null||!isFinite(v))return '—';const av=Math.abs(v);if(av>=1000000){const m=v/1e6;return m.toLocaleString('en-US',{maximumFractionDigits:Math.abs(m)>=10?0:1})+'M';}if(av>=1000){const k=v/1000;return k.toLocaleString('en-US',{maximumFractionDigits:Math.abs(k)>=10?0:1})+'K';}return String(Math.round(v));}
+function measureTextPx(text,fontPx){try{if(typeof document!=='undefined'){const c=document.createElement('canvas');const ctx=c.getContext('2d');if(ctx){ctx.font='600 '+fontPx+'px Inter,system-ui,sans-serif';return ctx.measureText(String(text||'')).width;}}}catch(e){}return String(text||'').length*fontPx*0.62;}
+function yCatLabelWidth(labels,fontPx,maxW){const raw=Math.max(24,...(labels||['']).map(s=>measureTextPx(s,fontPx)));return Math.min(maxW,Math.max(28,Math.ceil(raw+4)));}
+function pctile(arr,p){const a=arr.filter(v=>v!=null&&isFinite(v)).slice().sort((x,y)=>x-y);if(!a.length)return 0;const i=(a.length-1)*p,lo=Math.floor(i),hi=Math.ceil(i);return lo===hi?a[lo]:a[lo]+(a[hi]-a[lo])*(i-lo);}
+function robustYMax(vals){const a=vals.filter(v=>v!=null&&isFinite(v)&&v>0);if(!a.length)return 1;const mx=Math.max(...a);const cap=Math.max(pctile(a,0.95)*1.5,1);return Math.min(mx,cap);}
+function liveSeries(series){return (series||[]).filter(s=>Object.values(s.vals||{}).some(v=>v>0));}
+function chartDisplayWidth(half){const iw=typeof innerWidth==='undefined'?900:innerWidth;const avail=Math.max(160,iw-52);if(half&&avail>=856)return Math.max(160,(avail-16)/2);return avail;}
+function axFont(w){w=w==null?chartDisplayWidth(false):w;return 12*900/Math.max(w,160);}
+function leftPad(labels,fs){const w=Math.max(12,...(labels||['0']).map(s=>String(s||'').length*fs*0.7));return Math.ceil(w+16);}
+function chartMargins(w,labels){w=w==null?chartDisplayWidth(false):w;const iw=typeof innerWidth==='undefined'?w:innerWidth;const narrow=iw<=640;const fs=axFont(w);return {W:900,L:leftPad(labels,fs),R:narrow?56:48,T:Math.ceil(fs+12),B:Math.ceil(fs+16),maxTicks:narrow?5:10,fs};}
+function xLabels(days,x,H,B,lab,m){m=m||chartMargins();let s='';const n=days.length;const step=Math.max(1,Math.ceil(n/m.maxTicks));const Lbl=lab||fDs;const fs=m.fs;const y=H-B+fs+4;
+  days.forEach((d,i)=>{const last=i===n-1,first=i===0;if(!(first||last||i%step===0))return;if(!last&&!first&&(n-1-i)<step)return;const anc=last?'end':(first?'start':'middle');s+=`<text x="${x(i)}" y="${y}" class="ax" text-anchor="${anc}" font-size="${fs}">${Lbl(d)}</text>`;});return s;}
+function fitAxisFonts(){resizeCharts();}
+function legend(series){series=liveSeries(series);if(!series.length)return '';return '<div class="legend">'+series.map(s=>`<span><i style="background:${s.color};${s.dash?'opacity:.6':''}"></i>${esc(s.name)}</span>`).join('')+'</div>';}
+
+const CHART_Q=[];
+let EC_INST=[];
+function themeName(){return document.documentElement.getAttribute('data-theme')==='light'?'xdash-light':'xdash-dark';}
+function registerThemes(){
+  if(typeof echarts==='undefined'||echarts.__xdashThemes)return;
+  const font='Inter, system-ui, sans-serif';
+  const dark={
+    color:['#3b82f6','#22c55e','#a78bfa','#f59e0b','#f43f5e','#14b8a6'],
+    backgroundColor:'transparent',
+    textStyle:{fontFamily:font,color:'#8b98a5'},
+    legend:{textStyle:{color:'#8b98a5',fontFamily:font,fontSize:11}},
+    tooltip:{confine:true,backgroundColor:'rgba(18,24,32,.96)',borderColor:'#243040',textStyle:{color:'#e8eef3',fontFamily:font,fontSize:12}},
+    categoryAxis:{axisLine:{lineStyle:{color:'#243040'}},axisTick:{show:false},axisLabel:{color:'#8b98a5',fontFamily:font,fontSize:11},splitLine:{show:false}},
+    valueAxis:{axisLine:{show:false},axisTick:{show:false},axisLabel:{color:'#8b98a5',fontFamily:font,fontSize:11},splitLine:{lineStyle:{color:'#243040',type:'dashed'}}}
+  };
+  const light={
+    color:['#2563eb','#16a34a','#7c3aed','#d97706','#e11d48','#0d9488'],
+    backgroundColor:'transparent',
+    textStyle:{fontFamily:font,color:'#5b6773'},
+    legend:{textStyle:{color:'#5b6773',fontFamily:font,fontSize:11}},
+    tooltip:{confine:true,backgroundColor:'rgba(255,255,255,.96)',borderColor:'#d5dce4',textStyle:{color:'#111827',fontFamily:font,fontSize:12}},
+    categoryAxis:{axisLine:{lineStyle:{color:'#d5dce4'}},axisTick:{show:false},axisLabel:{color:'#5b6773',fontFamily:font,fontSize:11},splitLine:{show:false}},
+    valueAxis:{axisLine:{show:false},axisTick:{show:false},axisLabel:{color:'#5b6773',fontFamily:font,fontSize:11},splitLine:{lineStyle:{color:'#e5eaf0',type:'dashed'}}}
+  };
+  echarts.registerTheme('xdash-dark',dark);
+  echarts.registerTheme('xdash-light',light);
+  echarts.__xdashThemes=1;
+}
+function enqueueChart(kind,option,h,cls){
+  const id='ec-'+CHART_Q.length+'-'+kind;
+  CHART_Q.push({id,kind,option});
+  const hh=h||240;
+  return `<div class="echart echart-${kind}${cls?' '+cls:''}" id="${id}" style="height:${hh}px" role="img"></div>`;
+}
+function resizeCharts(){(EC_INST||[]).forEach(c=>{try{c.resize();}catch(e){}});}
+function syncHighlight(){
+  const d=state.hlDay;
+  (EC_INST||[]).forEach(c=>{
+    try{
+      if(d) c.dispatchAction({type:'highlight', name:d});
+    }catch(e){}
+  });
+}
+function mountCharts(){
+  registerThemes();
+  (EC_INST||[]).forEach(c=>{try{c.dispose();}catch(e){}});
+  EC_INST=[];
+  if(typeof echarts==='undefined'){CHART_Q.length=0;return;}
+  for(const spec of CHART_Q){
+    const el=document.getElementById(spec.id);
+    if(!el) continue;
+    const c=echarts.init(el, themeName(), {renderer:'svg'});
+    try{c.showLoading({text:'Loading',maskColor:'transparent'});}catch(e){}
+    c.setOption(spec.option,true);
+    try{c.hideLoading();}catch(e){}
+    if(spec.option&&spec.option.__xdashHeat)c.__xdashHeat=spec.option.__xdashHeat;
+    if(spec.kind==='line'||spec.kind==='bar'||spec.kind==='combo'){
+      const xa=spec.option&&spec.option.xAxis;
+      const ax=Array.isArray(xa)?xa[0]:xa;
+      const days=(ax&&ax.data)||[];
+      bindDateHover(c,days);
+      c.on('click', ev=>{
+        const name=ev&&(ev.name|| (ev.data&&ev.data.name));
+        if(name&&/^\d{4}-\d{2}-\d{2}$/.test(String(name))){state.hlDay=String(name);syncHighlight();}
+      });
+      bindZoomReset(el,c);
+    }
+    EC_INST.push(c);
+  }
+  CHART_Q.length=0;
+  document.querySelectorAll('.spark[data-spark]').forEach(el=>{
+    let vals=[];
+    try{vals=JSON.parse(el.getAttribute('data-spark')||'[]');}catch(e){vals=[];}
+    const c=echarts.init(el, themeName(), {renderer:'svg'});
+    c.setOption({
+      animation:false,
+      grid:{left:0,right:0,top:4,bottom:2},
+      xAxis:{type:'category',show:false,data:vals.map((_,i)=>i)},
+      yAxis:{type:'value',show:false},
+      series:[{type:'line',data:vals,smooth:false,symbol:'none',connectNulls:false,lineStyle:{width:1.6,color:'#3b82f6'},areaStyle:{color:'rgba(59,130,246,.18)'}}]
+    },true);
+    EC_INST.push(c);
+  });
+  syncHighlight();
+}
+function zoomOpt(narrow){
+  return [{type:'inside',filterMode:'none',zoomOnMouseWheel:true,moveOnMouseMove:true}];
+}
+function bindZoomReset(el,c){
+  if(!el||!c)return;
+  let btn=el.querySelector('.zoom-reset');
+  if(!btn){
+    btn=document.createElement('button');
+    btn.type='button';
+    btn.className='zoom-reset';
+    btn.title='Reset zoom';
+    btn.setAttribute('aria-label','Reset zoom');
+    btn.textContent='↺';
+    btn.addEventListener('click',ev=>{ev.preventDefault();ev.stopPropagation();try{c.dispatchAction({type:'dataZoom',start:0,end:100});}catch(e){}});
+    el.appendChild(btn);
+  }
+  const sync=()=>{
+    try{
+      const dz=((c.getOption()||{}).dataZoom||[])[0]||{};
+      const start=dz.start==null?0:+dz.start;
+      const end=dz.end==null?100:+dz.end;
+      el.classList.toggle('is-zoomed', start>0.5 || end<99.5);
+    }catch(e){}
+  };
+  c.on('datazoom',sync);
+  sync();
+}
+function bindDateHover(c,days){
+  if(!c)return;
+  c.__xdashDays=days||[];
+  c.on('updateAxisPointer',ev=>{
+    if(c.__xdashSyncing)return;
+    let day=null;
+    const info=(ev&&ev.axesInfo)||[];
+    for(const a of info){
+      const v=a&&a.value;
+      if(v!=null&&c.__xdashDays.indexOf(String(v))>=0){day=String(v);break;}
+    }
+    if(!day&&ev&&ev.dataIndex!=null&&c.__xdashDays[ev.dataIndex]) day=c.__xdashDays[ev.dataIndex];
+    window.__xdashLastHover=day||null;
+    (EC_INST||[]).forEach(other=>{
+      if(other===c||!other.__xdashDays)return;
+      other.__xdashSyncing=true;
+      try{
+        const idx=day?other.__xdashDays.indexOf(day):-1;
+        if(idx>=0){
+          other.dispatchAction({type:'updateAxisPointer',currTrigger:'show',xAxisIndex:0,value:day});
+          other.dispatchAction({type:'hideTip'});
+          other.dispatchAction({type:'highlight',dataIndex:idx});
+        }else{
+          other.dispatchAction({type:'hideTip'});
+          other.dispatchAction({type:'downplay'});
+          other.dispatchAction({type:'updateAxisPointer',currTrigger:'leave'});
+        }
+      }catch(e){}
+      other.__xdashSyncing=false;
+    });
+  });
+  c.on('globalout',()=>{
+    window.__xdashLastHover=null;
+    (EC_INST||[]).forEach(other=>{
+      if(other===c)return;
+      other.__xdashSyncing=true;
+      try{
+        other.dispatchAction({type:'hideTip'});
+        other.dispatchAction({type:'downplay'});
+        other.dispatchAction({type:'updateAxisPointer',currTrigger:'leave'});
+      }catch(e){}
+      other.__xdashSyncing=false;
+    });
+  });
+}
+function lineChart(days,series,o){o=o||{};series=liveSeries(series);if(!series.length)return null;
+  const ys=[];series.forEach(s=>{if(s.prev)return;days.forEach(d=>{const v=s.vals[d];if(v!=null&&isFinite(v))ys.push(v);if(s.band&&s.bandLo&&s.bandLo[d]!=null)ys.push(s.bandLo[d]);});});
+  if(!ys.length)return null;let lo=Math.min(...ys),hi=Math.max(...ys);if(o.zero)lo=Math.min(0,lo);
+  if(lo===hi){lo-=1;hi+=1;}
+  const plot=chartPlot(o,240);const yvs=yTickVals(lo,hi,niceStep(hi-lo,plot.maxY),plot.maxY);lo=yvs[0];hi=yvs[yvs.length-1];
+  const xlab=o.xlab||fDs, pct=!!o.pct;
+  const band=series.find(s=>s.band);
+  const lines=series.filter(s=>!s.band);
+  const ser=[];let prevMarks=[];
+  if(band&&band.bandLo){
+    const widths=days.map(d=>{const hiV=band.vals[d],loV=band.bandLo[d];return (hiV==null||loV==null)?0:Math.max(0,hiV-loV);});
+    if(widths.some(w=>w>0)){
+      ser.push({name:'band-lo',type:'line',data:days.map(d=>band.bandLo[d]==null?null:band.bandLo[d]),symbol:'none',lineStyle:{opacity:0},areaStyle:{opacity:0},stack:'band',tooltip:{show:false},silent:true,legendHoverLink:false});
+      ser.push({name:'band-hi',type:'line',data:days.map(d=>{const hiV=band.vals[d],loV=band.bandLo[d];return (hiV==null||loV==null)?null:Math.max(0,hiV-loV);}),symbol:'none',lineStyle:{opacity:0},areaStyle:{color:'rgba(59,130,246,.14)'},stack:'band',tooltip:{show:false},silent:true,legendHoverLink:false});
+    }
+  }
+  for(const s of lines){
+    const clipped=s.prev?clipPrevLine(s.vals,hi,days):null;
+    if(clipped&&clipped.marks.length)prevMarks=prevMarks.concat(clipped.marks);
+    ser.push({
+      name:s.name,type:'line',data:clipped?clipped.data:days.map(d=>({name:d,value:s.vals[d]==null?null:s.vals[d]})),
+      smooth:false,symbol:'none',showSymbol:false,connectNulls:!!s.connect,
+      z:s.z||(s.dash?2:5),
+      lineStyle:{width:s.width||(s.dash?1.6:2.2),type:s.dotted?'dotted':(s.dash?'dashed':'solid'),color:s.color,opacity:s.fade?0.45:1},
+      itemStyle:{color:s.color},
+      markPoint:(clipped&&clipped.marks.length)?outMarkStyle(clipped.marks):undefined
+    });
+  }
+  const option={
+    animationDuration:280,
+    legend:{top:0,type:'scroll',data:lines.map(s=>s.name)},
+    tooltip:{trigger:'axis',confine:true,formatter:ps=>{
+      if(!ps||!ps.length)return '';
+      const day=ps[0]&&ps[0].name;
+      let s=fDs(day);let n=0;
+      ps.forEach(p=>{
+        if(p.seriesName==='out-mark'||String(p.seriesName||'').indexOf('band-')===0)return;
+        const raw=tipRaw(p);if(raw==null||raw==='')return;
+        const lab=p.seriesName||'';
+        const val=pct?fP(raw):(o.vfmt?o.vfmt(raw):fN(raw));
+        s+='<br/>'+esc(lab)+': '+val;n++;
+      });
+      return n?s:'';
+    }},
+    grid:{left:8,right:12,top:prevMarks.length?50:28,bottom:plot.narrow?28:28,containLabel:true},
+    xAxis:{type:'category',data:days,axisLabel:{formatter:xlab}},
+    yAxis:{type:'value',min:lo,max:hi,axisLabel:{formatter:v=>axFmt(v,pct)}},
+    dataZoom:zoomOpt(plot.narrow),
+    series:ser
+  };
+  return enqueueChart('line',option,Math.max(plot.H,220));}
+function barChart(days,series,o){o=o||{};series=liveSeries(series);if(!series.length)return '';
+  const tot=days.map(d=>series.reduce((t,s)=>t+(s.vals[d]||0),0));
+  const cap=robustYMax(tot);
+  const plot=chartPlot(o,220);let hi=cap>0?cap:1;const yvs=yTickVals(0,hi,niceStep(hi,plot.maxY),plot.maxY);hi=yvs[yvs.length-1];
+  const markData=[];
+  days.forEach((d,i)=>{if(tot[i]>hi)markData.push({name:'out-mark',coord:[d,hi],xAxis:d,yAxis:hi,value:tot[i]});});
+  const ser=series.map((s,si)=>({
+    name:s.name,type:'bar',stack:series.length>1?'stack':undefined,
+    data:days.map(d=>{
+      const row={name:d,value:Math.min(s.vals[d]||0,hi)};
+      if(o.dayColor&&o.dayColor[d]) row.itemStyle={color:o.dayColor[d],opacity:s.fade||(si?Math.max(0.45,1-si*0.18):1)};
+      return row;
+    }),
+    itemStyle:{color:s.color,borderRadius:[2,2,0,0]},
+    markPoint:(!si&&markData.length)?outMarkStyle(markData):undefined
+  }));
+  let prevMarks=[];
+  if(o.prevLine&&prevPointCount(o.prevLine.vals)>=2){
+    const clipped=clipPrevLine(o.prevLine.vals,hi,days);
+    prevMarks=clipped.marks;
+    ser.push({name:o.prevLine.name||'Previous',type:'line',data:clipped.data,smooth:false,symbol:'none',connectNulls:false,z:6,lineStyle:{width:1.5,type:'dashed',color:o.prevLine.color||'#8b98a5',opacity:0.45},markPoint:clipped.marks.length?outMarkStyle(clipped.marks):undefined});
+  }
+  const anyMarks=markData.length||prevMarks.length;
+  const option={
+    animationDuration:280,
+    legend:{top:0,type:'scroll',show:series.length>1||!!o.legend,data:ser.filter(s=>s.name&&s.name!=='out-mark').map(s=>s.name)},
+    tooltip:{trigger:'axis',confine:true,formatter:ps=>{
+      if(!ps||!ps.length)return '';
+      let s=fDs(ps[0].name);let n=0;
+      ps.forEach(p=>{if(p.seriesName==='out-mark')return;const raw=tipRaw(p);if(raw==null||raw==='')return;s+='<br/>'+esc(p.seriesName||'')+': '+fN(raw);n++;});
+      return n?s:'';
+    }},
+    grid:{left:8,right:12,top:anyMarks?50:28,bottom:plot.narrow?28:28,containLabel:true},
+    xAxis:{type:'category',data:days,axisLabel:{formatter:fDs}},
+    yAxis:{type:'value',min:0,max:hi,axisLabel:{formatter:v=>axFmt(v)}},
+    dataZoom:zoomOpt(plot.narrow),
+    series:ser
+  };
+  return enqueueChart('bar',option,Math.max(plot.H,200));}
+function comboChart(days,barVals,lineVals,o){o=o||{};
+  const plot=chartPlot(o,240);
+  const tot=days.map(d=>barVals[d]||0);
+  const cap=robustYMax(tot);
+  let hi=cap>0?cap:1;const yvs=yTickVals(0,hi,niceStep(hi,plot.maxY),plot.maxY);hi=yvs[yvs.length-1];
+  const markData=[];
+  days.forEach((d,i)=>{if(tot[i]>hi)markData.push({name:'out-mark',coord:[d,hi],xAxis:d,yAxis:hi,value:tot[i]});});
+  const ser=[
+    {name:'Impressions',type:'bar',data:days.map(d=>({name:d,value:Math.min(barVals[d]||0,hi)})),itemStyle:{color:'#3b82f6',borderRadius:[2,2,0,0]},
+      markPoint:markData.length?outMarkStyle(markData):undefined},
+    {name:'ER',type:'line',yAxisIndex:1,data:days.map(d=>({name:d,value:lineVals[d]==null?null:lineVals[d]})),smooth:false,symbol:'none',connectNulls:false,itemStyle:{color:'#22c55e'},lineStyle:{width:2}}
+  ];
+  let prevMarks=[];
+  if(o.prevImp&&prevPointCount(o.prevImp)>=2){
+    const clipped=clipPrevLine(o.prevImp,hi,days);
+    prevMarks=clipped.marks;
+    ser.push({name:'Prev. impressions',type:'line',data:clipped.data,smooth:false,symbol:'none',z:6,lineStyle:{width:1.5,type:'dashed',color:'#8b98a5',opacity:0.45},markPoint:clipped.marks.length?outMarkStyle(clipped.marks):undefined});
+  }
+  if(o.prevEr&&prevPointCount(o.prevEr)>=2){
+    ser.push({name:'Prev. ER',type:'line',yAxisIndex:1,data:days.map(d=>({name:d,value:o.prevEr[d]==null?null:o.prevEr[d]})),smooth:false,symbol:'none',z:6,lineStyle:{width:1.5,type:'dashed',color:'#22c55e',opacity:0.4}});
+  }
+  const anyMarks=markData.length||prevMarks.length;
+  const option={
+    animationDuration:280,
+    legend:{top:0,data:ser.map(s=>s.name)},
+    tooltip:{trigger:'axis',confine:true,formatter:ps=>{
+      if(!ps||!ps.length)return '';
+      let s=fDs(ps[0].name);let n=0;
+      ps.forEach(p=>{
+        if(p.seriesName==='out-mark')return;
+        const raw=tipRaw(p);if(raw==null||raw==='')return;
+        const er=/ER/.test(p.seriesName||'');
+        s+='<br/>'+esc(p.seriesName||'')+': '+(er?fP(raw):fN(raw));n++;
+      });
+      return n?s:'';
+    }},
+    grid:{left:8,right:16,top:anyMarks?50:28,bottom:plot.narrow?28:28,containLabel:true},
+    xAxis:{type:'category',data:days,axisLabel:{formatter:fDs}},
+    yAxis:[
+      {type:'value',min:0,max:hi,axisLabel:{formatter:v=>axFmt(v)}},
+      {type:'value',min:0,axisLabel:{formatter:v=>axFmt(v,true)},splitLine:{show:false}}
+    ],
+    dataZoom:zoomOpt(plot.narrow),
+    series:ser
+  };
+  return enqueueChart('combo',option,Math.max(plot.H,220));}
+
+/* ---------- sortable tables ---------- */
+const SORT={};
+function cmp(a,b){if(a==null&&b==null)return 0;if(a==null)return 1;if(b==null)return -1;return typeof a==='number'&&typeof b==='number'?a-b:String(a).localeCompare(String(b),'en');}
+function table(tid,cols,rows,def,o){o=o||{};if(!rows.length)return o.empty||EMPTY;const st=SORT[tid]||def||{};let r=rows.slice();
+  if(st.key){const dir=st.desc?-1:1;r.sort((a,b)=>{const va=a[st.key],vb=b[st.key];if(va==null&&vb!=null)return 1;if(vb==null&&va!=null)return -1;return cmp(va,vb)*dir;});}
+  if(o.limit)r=r.slice(0,o.limit);
+  let h=`<div class="tw${o.wrapClass?' '+o.wrapClass:''}"${o.wrapId?` id="${esc(o.wrapId)}"`:''}><table><thead><tr>`+cols.map(c=>`<th class="${c.num?'r':''}${c.cls?' '+c.cls:''}" ${c.nosort?'':`data-tid="${tid}" data-key="${c.key}"`}>${esc(c.label)}${st.key===c.key?(st.desc?' ▾':' ▴'):''}</th>`).join('')+`</tr></thead><tbody>`;
+  for(const row of r){h+=`<tr class="${row._cls||''}"${o.rowAttr?o.rowAttr(row):''}>`+cols.map(c=>`<td class="${c.num?'r num':''}${c.cls?' '+c.cls:''}">${c.fmt?c.fmt(row[c.key],row):esc(row[c.key])}</td>`).join('')+'</tr>';}
+  return h+'</tbody></table></div>'+(o.limit&&rows.length>o.limit?`<div class="note">Top ${o.limit} of ${rows.length} shown.</div>`:'');}
+document.addEventListener('click',e=>{const th=e.target.closest('th[data-key]');if(!th)return;const t=th.dataset.tid,k=th.dataset.key;const cur=SORT[t]||{};SORT[t]={key:k,desc:cur.key===k?!cur.desc:true};render();});
+
+const card=(k,v,n,c)=>`<div class="card"><div class="k">${k}</div><div class="v num ${c||''}">${v}</div>${n?`<div class="n">${n}</div>`:''}</div>`;
+const fold=(t,b)=>`<details class="fold"><summary>${t}</summary>${b}</details>`;
+function kpi(label,val,delta,deltaCls,tip,spark,tone,extra){
+  const d=(delta==null||delta==='')?'':`<div class="delta ${deltaCls||''}">${delta}</div>`;
+  const x=(extra==null||extra==='')?'':`<div class="streak">${extra}</div>`;
+  const sp=(spark&&spark.length)?`<div class="spark" data-spark="${esc(JSON.stringify(spark))}"></div>`:'';
+  const tl=tone?` kpi-tl tl-${tone}`:'';
+  return `<div class="kpi${tl}"${tip?` title="${esc(tip)}"`:''}><div class="v num">${val}</div><div class="k">${esc(label)}</div>${d}${x}${sp}</div>`;
+}
+function prevRange(){const n=dateDiffDays(state.start,state.end)+1;const end=addDays(state.start,-1);return {start:addDays(end,-(n-1)),end};}
+function prevFullyCovered(){const pr=prevRange();return !!(pr.start&&minDataDate()&&pr.start>=minDataDate());}
+function vsPrevLabel(){const p=state.preset;if(p==='7'||p==='30'||p==='90')return 'vs prev. '+p+'d';return 'vs prev. period';}
+function alignPrev(days,fullMap){const pr=prevRange();const pdays=dayList(pr.start,pr.end);const o={};days.forEach((d,i)=>{const src=pdays[i];o[d]=(src!=null&&fullMap[src]!=null)?fullMap[src]:null;});return o;}
+function compareOn(){return !!(state.compare&&prevFullyCovered());}
+function deltaPair(cur,prev,kind){
+  if(!state.compare||!prevFullyCovered()||cur==null||prev==null) return {t:'',c:'',tone:''};
+  const d=cur-prev;
+  const vs='<span class="vs">'+vsPrevLabel()+'</span>';
+  if(kind==='er'){
+    const arrow=d>0?'▲':(d<0?'▼':'');
+    const rel=Math.abs(prev)>0?d/Math.abs(prev):null;
+    const tone=trafficLightDelta(rel);
+    return {t:arrow+' '+(d>0?'+':'')+(d*100).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+' pp '+vs,c:tone?('tl-'+tone):cls(d),tone};
+  }
+  if(!(Math.abs(prev)>0)) return {t:'',c:'',tone:''};
+  const rel=d/Math.abs(prev);
+  const pct=rel*100;
+  const tone=trafficLightDelta(rel);
+  const arrow=d>0?'▲':(d<0?'▼':'');
+  return {t:arrow+' '+(pct>0?'+':'')+pct.toLocaleString('en-US',{maximumFractionDigits:0})+'% '+vs,c:tone?('tl-'+tone):cls(d),tone};
+}
+function dailyMap(a,b,fn){const o={};for(const d of dayList(a,b)) o[d]=fn(d);return o;}
+
+
+/* ---------- data helpers ---------- */
+const S=F.snapshots;
+const snapOn=d=>S.find(s=>s.date===d)||null;
+function snapOnOrBefore(d,k){let r=null;for(const s of S)if(s.date<=d&&(!k||s[k]!=null))r=s;return r;}
+function latestFollowers(end){const hi=end||(typeof state!=='undefined'&&state.end)||TODAY;const s=snapOnOrBefore(hi,'followers_count');return (s&&s.followers_count!=null)?s.followers_count:null;}
+const postsOn=d=>POSTS.filter(p=>p.local_date===d);
+const firstPostDate=POSTS.length?POSTS.reduce((m,p)=>p.local_date<m?p.local_date:m,POSTS[0].local_date):null;
+function postsIn(a,b){return POSTS.filter(p=>p.local_date>=a&&p.local_date<=b);}
+const ENGP=p=>p.type!=='repost';
+function postLink(p){const t=(p.text||'').replace(/\s+/g,' ');return `<a href="${esc(p.url)}" target="_blank" rel="noopener" title="${esc(t)}">${esc(t.length>90?t.slice(0,90)+'…':(t||'(no text) '+p.id))}</a>`;}
+function typeCell(p){return esc(TYPE_NL[p.type]||p.type)+(p.type_inferred?' <span class="note" title="Type inferred (no explicit type in the source)">*</span>':'');}
+
+function snapsWithFc(){return S.filter(s=>s.followers_count!=null);}
+function snapshotPaceOk(){const a=snapsWithFc();if(a.length<2)return false;return dateDiffDays(a[0].date,a[a.length-1].date)>=3;}
+function paceOverDays(n){const a=snapsWithFc();if(a.length<2||!(n>0))return null;const last=a[a.length-1];const fromDate=addDays(last.date,-n);const startVal=followersOn(fromDate);if(startVal==null)return null;const days=n;const perDay=(last.followers_count-startVal)/days;return {perDay,perWeek:perDay*7,from:fromDate,to:last.date,start:startVal,end:last.followers_count,days,source:'snapshots'};}
+function analyticsPace(){const P=POSTS.filter(p=>p.type!=='repost'&&p.new_follows!=null);if(!P.length)return null;const by={};P.forEach(p=>{const w=isoWeek(p.local_date);by[w]=(by[w]||0)+p.new_follows;});const weeks=Object.keys(by).sort();if(!weeks.length)return null;const total=weeks.reduce((t,w)=>t+by[w],0);const perWeek=total/weeks.length;return {perDay:perWeek/7,perWeek,from:weeks[0],to:weeks[weeks.length-1],source:'analytics',weeks:weeks.length,total};}
+function fillLerp(days,d0,v0,d1,v1){const vals={};const span=Math.max(1,dateDiffDays(d0,d1));days.forEach(d=>{if(d<d0)return;if(d>d1){vals[d]=v1;return;}vals[d]=v0+(v1-v0)*dateDiffDays(d0,d)/span;});return vals;}
+function fillRate(days,d0,v0,perDay){const vals={};days.forEach(d=>{if(d<d0)return;vals[d]=v0+perDay*dateDiffDays(d0,d);});return vals;}
+function expectedDate(fromDate,fromVal,goal,perDay){if(goal==null||fromDate==null)return null;if(fromVal>=goal)return fromDate;if(!perDay||perDay<=0)return null;return addDays(fromDate,Math.ceil((goal-fromVal)/perDay));}
+function followerGoalHtml(){
+  const G=META.goal||{};const gf=G.followers,gd=G.date;const set=gf!=null&&!!gd;
+  let h='';
+  if(!set)h+='<div class="note">No goal set (goal_followers / goal_date in data/config.json)</div>';
+  const ok=snapshotPaceOk();
+  const p7=ok?paceOverDays(7):null,p30=ok?paceOverDays(30):null;
+  const fb=(!ok)?analyticsPace():null;
+  const useFb=!!fb&&!ok;
+  if(useFb)h+='<div class="note">Pace <b>based on new followers from X analytics</b> (fewer than 2 follower snapshots over at least 3 days).</div>';
+  else if(!ok)h+='<div class="note">Too few snapshots and no new_follows in the post data to estimate a pace.</div>';
+  const last=snapsWithFc().length?snapsWithFc()[snapsWithFc().length-1]:null;
+  const first=snapsWithFc().length?snapsWithFc()[0]:null;
+  const paceNote=(p,lab)=>p?`${lab}: ${f1(p.perWeek)} followers/week (${f1(p.perDay)}/day, ${fD(p.from)} → ${fD(p.to)}, n=${fN(p.days)} d)`:(useFb?`${lab}: ${f1(fb.perWeek)} followers/week (${fN(fb.weeks)} weeks, total ${fN(fb.total)})`:'no pace');
+  h+=`<div class="cards">${card('Pace 7 days',p7?f1(p7.perWeek)+'/w':(useFb?f1(fb.perWeek)+'/w':'—'),paceNote(p7,'7 d'))}${card('Pace 30 days',p30?f1(p30.perWeek)+'/w':(useFb?f1(fb.perWeek)+'/w':'—'),paceNote(p30,'30 d'))}</div>`;
+  const rate7=p7?p7.perDay:(useFb?fb.perDay:null);
+  const rate30=p30?p30.perDay:(useFb?fb.perDay:null);
+  if(set&&last&&first){
+    const onNow=first.date===gd?gf:(first.followers_count+(gf-first.followers_count)*dateDiffDays(first.date,last.date)/Math.max(1,dateDiffDays(first.date,gd)));
+    const cur=last.followers_count;let st='on track',stc='p-ok';
+    if(cur>=gf){st='goal reached';stc='p-ok';}
+    else if(cur>onNow+0.5){st='ahead';stc='p-ok';}
+    else if(cur<onNow-0.5){st='behind';stc='p-bad';}
+    const remain=Math.max(1,dateDiffDays(last.date,gd));
+    const needW=((gf-cur)/remain)*7;
+    const d7=expectedDate(last.date,cur,gf,rate7);
+    const d30=expectedDate(last.date,cur,gf,rate30);
+    h+=`<div class="cards">${card('Status',`<span class="pill ${stc}">${st}</span>`,`now ${fN(cur)} · on track ${f1(onNow)} on ${fD(last.date)}`)}${card('Needed per week',f1(needW),`to reach ${fN(gf)} by ${fD(gd)}`)}${card('Expected (7d pace)',d7?fD(d7):(rate7!=null&&rate7<=0?'not reachable at this pace':'—'))}${card('Expected (30d pace)',d30?fD(d30):(rate30!=null&&rate30<=0?'not reachable at this pace':'—'))}</div>`;
+    let xEnd=gd;if(d7&&d7>xEnd)xEnd=d7;if(d30&&d30>xEnd)xEnd=d30;
+    const xStart=first.date;const days=dayList(xStart,xEnd);
+    const actual=Object.fromEntries(snapsWithFc().map(s=>[s.date,s.followers_count]));
+    const series=[{name:'Actual followers',color:'#3b82f6',vals:actual},{name:'On track',color:'#8b98a5',dash:true,vals:fillLerp(days,first.date,first.followers_count,gd,gf)}];
+    const f7=rate7!=null?fillRate(days,last.date,cur,rate7):null;const f30=rate30!=null?fillRate(days,last.date,cur,rate30):null;
+    if(f7)series.push({name:'Forecast 7d',color:'#22c55e',dash:true,vals:f7});
+    if(f30)series.push({name:'Forecast 30d',color:'#f59e0b',dash:true,vals:f30});
+    if(f7&&f30){const lo={},hi={};days.forEach(d=>{if(f7[d]==null||f30[d]==null)return;lo[d]=Math.min(f7[d],f30[d]);hi[d]=Math.max(f7[d],f30[d]);});series.push({name:'Forecast band',color:'#3b82f6',vals:hi,band:true,bandLo:lo});}
+    const ch=lineChart(days,series,{h:220,vfmt:f1});if(ch)h+=ch;
+  }else if(last&&(rate7!=null||rate30!=null)){
+    const cur=last.followers_count;
+    const xEnd=addDays(last.date,60);const days=dayList(last.date,xEnd);
+    const actual=Object.fromEntries(snapsWithFc().map(s=>[s.date,s.followers_count]));
+    const series=[{name:'Actual followers',color:'#1d9bf0',vals:actual}];
+    if(rate7!=null)series.push({name:'Forecast 7d',color:'#00ba7c',dash:true,vals:fillRate(days,last.date,cur,rate7)});
+    if(rate30!=null&&!useFb)series.push({name:'Forecast 30d',color:'#ffad1f',dash:true,vals:fillRate(days,last.date,cur,rate30)});
+    else if(useFb&&rate7!=null){/* one analytics line is enough */}
+    const f30=rate7!=null?Math.round(cur+rate7*30):null;
+    h+=`<div class="note">Forecast without a goal: at the current pace, about ${fN(f30)} followers in 30 days.</div>`;
+    const ch=lineChart(days,series,{h:200,vfmt:f1});if(ch)h+=ch;
+  }else if(useFb){
+    h+=`<div class="note">Estimated pace ${f1(fb.perWeek)} new followers/week based on new followers from X analytics (${fN(fb.weeks)} weeks, total ${fN(fb.total)}).</div>`;
+  }
+  return fold('Follower goal',h||EMPTY);}
+function applyRoiFilter(){const q=(state.roiQ||'').trim().toLowerCase().replace(/^@/,'');document.querySelectorAll('#roi-wrap tbody tr[data-handle]').forEach(tr=>{const h=tr.dataset.handle||'';tr.style.display=(!q||h.includes(q))?'':'none';});}
+
+/* ---------- 1. Overview ---------- */
+function sec1(){const ref=refDay();const isToday=ref===TODAY;
+  const cols=[[ref,isToday?'Today':'Reference day'],[addDays(ref,-1),isToday?'Yesterday':'Previous day'],[addDays(ref,-7),isToday?'7 days ago':'7 days earlier']];
+  let h=`<h2>${STR.overview}</h2>`;
+  const newOn=d=>{const s=snapOn(d);if(s&&s.n_new!=null)return s.n_new;return F.new.filter(e=>e.date===d&&e.status==='nieuw').length;};
+  const lostOn=d=>{const s=snapOn(d);if(s&&(s.n_unfollowed!=null||s.n_possible!=null))return (s.n_unfollowed||0)+(s.n_possible||0);return F.lost.filter(e=>e.date===d&&(e.status==='ontvolger'||e.status==='mogelijk')).length;};
+  const prevSnap=d=>{let r=null;for(const s of S)if(s.date<d)r=s;return r;};
+  function growth(back){const cur=snapOnOrBefore(ref,'followers_count');if(!cur)return {v:null,n:'no snapshot'};
+    const target=addDays(ref,-back);let base=snapOnOrBefore(target,'followers_count');let partial=false;
+    if(!base){base=S.find(s=>s.followers_count!=null&&s.date<cur.date)||null;partial=true;}
+    if(!base)return {v:null,n:'too little history (only 1 snapshot)'};
+    const v=cur.followers_count-base.followers_count;
+    let n=partial?`since ${fD(base.date)} — less than ${back} days of history`:`${fD(base.date)} → ${fD(cur.date)}`;
+    if(!partial&&cur.date!==ref)n+=' (latest snapshot)';return {v,n,partial};}
+  const g1=growth(1),g7=growth(7),g30=growth(30);
+  const cur=snapOnOrBefore(ref,'followers_count');
+  const a=POSTS.length?postsIn(addDays(ref,-6),ref):[];
+  const b=POSTS.length?postsIn(addDays(ref,-13),addDays(ref,-7)):[];
+  const ae=a.filter(ENGP),be=b.filter(ENGP);
+  const ia=ae.length&&has(ae,'impressions')?sum(ae,'impressions'):null;
+  const ib=be.length&&has(be,'impressions')?sum(be,'impressions'):null;
+  const erA=erOf(ae),erB=erOf(be);
+  const dFol=g7.v,dImp=(ia!=null&&ib!=null)?ia-ib:null,dEr=(erA!=null&&erB!=null)?erA-erB:null;
+  const curP=postsIn(state.start,state.end);const curE=curP.filter(ENGP);const curOwn=curP.filter(p=>p.type==='post'||p.type==='quote');
+  const pr=prevRange();const prevP=postsIn(pr.start,pr.end);const prevE=prevP.filter(ENGP);const prevOwn=prevP.filter(p=>p.type==='post'||p.type==='quote');
+  const folNow=cur&&cur.followers_count!=null?cur.followers_count:null;
+  const impNow=curE.length&&has(curE,'impressions')?sum(curE,'impressions'):null;
+  const impPrev=prevE.length&&has(prevE,'impressions')?sum(prevE,'impressions'):null;
+  const erNow=erOf(curE),erPrev=erOf(prevE);
+  const repNow=curOwn.length&&has(curOwn,'replies')?sum(curOwn,'replies'):null;
+  const repPrev=prevOwn.length&&has(prevOwn,'replies')?sum(prevOwn,'replies'):null;
+  const visNow=curE.length&&has(curE,'profile_visits')?sum(curE,'profile_visits'):null;
+  const visPrev=prevE.length&&has(prevE,'profile_visits')?sum(prevE,'profile_visits'):null;
+  const dFolP=deltaPair(dFol,0); if(false){}
+  const df=deltaPair(folNow,(function(){const s=snapOnOrBefore(pr.end,'followers_count');return s&&s.followers_count;})());
+  const di=deltaPair(impNow,impPrev);const de=deltaPair(erNow,erPrev,'er');
+  const dr=deltaPair(repNow,repPrev);const dp=deltaPair(curP.length,prevP.length);const dv=deltaPair(visNow,visPrev);
+  const sparkFol=S.filter(s=>s.followers_count!=null&&inR(s.date)).map(s=>s.followers_count);
+  const sparkImp=dayList(state.start,state.end).map(d=>{const a=postsOn(d).filter(ENGP);return a.length&&has(a,'impressions')?sum(a,'impressions'):null;});
+  const sparkEr=dayList(state.start,state.end).map(d=>erOf(postsOn(d).filter(ENGP)));
+  const sparkRep=dayList(state.start,state.end).map(d=>{const a=postsOn(d).filter(p=>p.type==='post'||p.type==='quote');return a.length&&has(a,'replies')?sum(a,'replies'):null;});
+  const sparkPosts=dayList(state.start,state.end).map(d=>postsOn(d).length);
+  const sparkVis=dayList(state.start,state.end).map(d=>{const a=postsOn(d).filter(ENGP);return a.length&&has(a,'profile_visits')?sum(a,'profile_visits'):null;});
+  h+=`<div class="kpis" id="kpis">${kpi('Followers',folNow!=null?fN(folNow):'—',df.t,df.c,g7.n,sparkFol)}${kpi('Impressions',impNow!=null?fN(impNow):'—',di.t,di.c,'vs previous period',sparkImp)}${kpi('Engagement rate',fP(erNow),de.t,de.c,'weighted, excl. reposts',sparkEr)}${kpi('Replies received',repNow!=null?fN(repNow):'—',dr.t,dr.c,'on own posts/quotes',sparkRep)}${kpi('Posts',fN(curP.length),dp.t,dp.c,'all types',sparkPosts)}${kpi('Profile visits',visNow!=null?fN(visNow):'—',dv.t,dv.c,'if available',sparkVis)}</div>`;
+  const rows=[];
+  rows.push(['Followers (profile)',cols.map(([d])=>{const s=snapOn(d);return s&&s.followers_count!=null?fN(s.followers_count):'<span class="note">no snapshot</span>';})]);
+  rows.push(['Following (profile)',cols.map(([d])=>{const s=snapOn(d);return !s?'<span class="note">no snapshot</span>':s.following_count!=null?fN(s.following_count):'<span class="note">not recorded</span>';})]);
+  rows.push(['New followers (handles)',cols.map(([d])=>snapOn(d)&&prevSnap(d)?`${fN(newOn(d))} <span class="note">vs ${fDs(prevSnap(d).date)}</span>`:'<span class="note">—</span>')]);
+  rows.push(['Left follower list (unfollowed / possible)',cols.map(([d])=>snapOn(d)&&prevSnap(d)?fN(lostOn(d)):'<span class="note">—</span>')]);
+  if(POSTS.length){
+    rows.push(['Posts (all types)',cols.map(([d])=>{if(firstPostDate&&d<firstPostDate)return '<span class="note">before post data starts</span>';const a=postsOn(d);const b=['post','reply','repost','quote'].map(t=>a.filter(p=>p.type===t).length);return `${fN(a.length)} <span class="note">(${b[0]} post · ${b[1]} reply · ${b[2]} repost · ${b[3]} quote)</span>`;})]);
+    rows.push(['Impressions (posts that day)',cols.map(([d])=>{const a=postsOn(d).filter(ENGP);return a.length&&has(a,'impressions')?fN(sum(a,'impressions')):'<span class="note">—</span>';})]);
+  }else rows.push(['Posts',cols.map(()=>'<span class="note">no post data</span>')]);
+  const cmpTbl=`<div class="tw" style="max-height:none"><table><thead><tr><th></th>${cols.map(([d,l])=>`<th>${l}<br><span class="note">${fD(d)}</span></th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr><td>${r[0]}</td>${r[1].map(c=>`<td class="num">${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+  const extraCards=`<div class="cards">${card('Day',sgn(g1.v),g1.n,cls(g1.v))}${card('Week (7d)',sgn(g7.v),g7.n,cls(g7.v))}${card('Month (30d)',sgn(g30.v),g30.n,cls(g30.v))}</div>`+
+    (POSTS.length?`<div class="cards">${card('Posts (all types)',fN(a.length),`previous 7d: ${fN(b.length)}`)}${card('Impressions',fN(ia),`previous 7d: ${fN(ib)}`)}${card('Avg. engagement rate',fP(erA),`previous 7d: ${fP(erB)} · weighted, excl. reposts`)}${card('New followers via posts',has(ae,'new_follows')?fN(sum(ae,'new_follows')):'—','sum of new_follows')}</div>`:emptyMsg('Impressions and engagement rate come from data/posts/ or data/analytics-csv/.'));
+  h+=fold('Comparison',cmpTbl+extraCards);
+  return h;}
+
+/* ---------- 2. Followers ---------- */
+function verPill(r){const i=r.verified_info||{};return `<span class="pill p-ok" title="Manually verified${i.checked_at?' on '+esc(i.checked_at):''}${i.note?': '+esc(i.note):''} (verified_unfollowers, listed in snapshot ${fD(i.first_listed)})">verified</span>`;}
+const LOST_LBL={ontvolger:['Unfollowed','p-bad'],mogelijk:['Possible unfollow (incomplete capture)','p-warn'],capture_gat:['Not an unfollow — capture gap','p-mut'],verwijderd:['Deleted','p-vio'],geschorst:['Suspended','p-vio']};
+function reasonLbl(v){const m={ontvolger:'unfollowed',verwijderd:'deleted',geschorst:'suspended',mogelijk:'possible unfollow',capture_gat:'capture gap',nieuw:'new',terug:'returned'};if(v==null||v==='')return '—';const k=String(v).toLowerCase();return m[k]||String(v);}
+function sec2(){let h=`<h2>${STR.followers}</h2>`;
+  if(!S.length)return h+followerGoalHtml()+EMPTY;
+  const sIn=S.filter(s=>inR(s.date));const cs=S[0].date>state.start?S[0].date:state.start;const days=dayList(cs,state.end);
+  const ch=lineChart(days,[
+    {name:'Followers (profile count)',color:'#1d9bf0',vals:Object.fromEntries(S.filter(s=>s.followers_count!=null).map(s=>[s.date,s.followers_count]))},
+    {name:'Following (profile count)',color:'#a78bfa',vals:Object.fromEntries(S.filter(s=>s.following_count!=null).map(s=>[s.date,s.following_count]))},
+    {name:'Follower handles collected',color:'#8b98a5',dash:true,vals:Object.fromEntries(S.map(s=>[s.date,s.collected_count]))}]);
+  h+='<h3>Followers per day</h3>'+(ch||emptyMsg('No snapshots in this period.'));
+  h+=followerGoalHtml();
+  const inc=sIn.filter(s=>!s.complete).length;
+  const NEW=F.new.filter(e=>inR(e.date)),LOST=F.lost.filter(e=>inR(e.date));
+  const perDay=sIn.slice().reverse().map(s=>({date:s.date,fc:s.followers_count,gc:s.following_count,cc:s.collected_count,complete:s.complete,
+    nieuw:s.n_new!=null?s.n_new:NEW.filter(e=>e.date===s.date&&e.status==='nieuw').length,
+    terug:s.n_returned!=null?s.n_returned:NEW.filter(e=>e.date===s.date&&e.status==='terug').length,
+    ontv:s.n_unfollowed!=null?s.n_unfollowed:LOST.filter(e=>e.date===s.date&&e.status==='ontvolger').length,
+    mog:s.n_possible!=null?s.n_possible:LOST.filter(e=>e.date===s.date&&e.status==='mogelijk').length,
+    gat:s.n_gap!=null?s.n_gap:LOST.filter(e=>e.date===s.date&&e.status==='capture_gat').length,
+    verw:s.n_removed!=null?s.n_removed:LOST.filter(e=>e.date===s.date&&e.status==='verwijderd').length,src:s.source,notes:s.notes}));
+  const first=S[0].date;
+  let extra='';
+  if(inc)extra+=`<div class="warnbox">${inc} of ${sIn.length} snapshot(s) in this period are <b>incomplete</b> (fewer handles collected than the profile count). Accounts that disappear from the list then count as <i>possible</i> unfollows; if they reappear later, they are marked as a capture gap and not counted as unfollowers.</div>`;
+  extra+='<h3>Snapshots per day</h3>'+table('snaps',[
+    {key:'date',label:'Date',fmt:v=>fD(v)+(v===first?' <span class="note">(baseline)</span>':'')},{key:'fc',label:'Followers',num:1,fmt:fN},{key:'gc',label:'Following',num:1,fmt:fN},
+    {key:'cc',label:'Handles collected',num:1,fmt:(v,r)=>fN(v)+(r.complete?' '+pill('complete','p-ok'):' '+pill('incomplete','p-warn'))},
+    {key:'nieuw',label:'New',num:1,fmt:(v,r)=>r.date===first?'—':fN(v)},{key:'terug',label:'Returned',num:1,fmt:(v,r)=>r.date===first?'—':fN(v)},
+    {key:'ontv',label:'Unfollowed',num:1,fmt:(v,r)=>r.date===first?'—':fN(v)},{key:'mog',label:'Possible unf.',num:1,fmt:(v,r)=>r.date===first?'—':fN(v)},
+    {key:'gat',label:'Capture gap',num:1,fmt:(v,r)=>r.date===first?'—':fN(v)},{key:'verw',label:'Del./suspended',num:1,fmt:(v,r)=>r.date===first?'—':fN(v)},
+    {key:'src',label:'Source',fmt:(v,r)=>`<span class="note" title="${esc(r.notes||'')}">${esc(IS_PUBLIC?'snapshot':v)}</span>`}],perDay,null,{empty:emptyMsg('No snapshots in this period.')});
+  if(IS_PUBLIC){
+    extra+='<div class="note">The public view shows counts only, not other people\'s accounts.</div>';
+    return h+fold('Tables',extra);
+  }
+  const nN=NEW.filter(e=>e.status==='nieuw').length,nT=NEW.length-nN;
+  extra+=followCaveat()+`<div class="grid2"><div><h3>New followers (${fN(nN)} new${nT?`, ${fN(nT)} returned`:''})</h3>`+table('new',[
+    {key:'date',label:'Date',fmt:fD},{key:'handle',label:'Account',fmt:hl},
+    {key:'status',label:'Status',fmt:v=>v==='nieuw'?pill('new','p-ok'):`<span class="pill p-mut" title="Already appeared in an earlier snapshot: likely a capture gap or they followed again">returned (seen before)</span>`},
+    {key:'follows_back',label:'Follows back?',fmt:(v,r)=>yn(v,r.follows_back_reason,r.follows_back_basis)}],NEW.map(e=>Object.assign({},e)),{key:'date',desc:true},{empty:emptyMsg(S.length<2?'At least 2 snapshots are needed for a diff.':'No new followers in this period.')})+'</div>';
+  const cnt=k=>LOST.filter(e=>e.status===k).length;
+  extra+=`<div><h3>Unfollowers (${fN(cnt('ontvolger'))} confirmed${LOST.some(e=>e.verified)?`, of which ${fN(LOST.filter(e=>e.verified).length)} verified`:''}, ${fN(cnt('mogelijk'))} possible)</h3><div class="note">Not counted: ${fN(cnt('capture_gat'))} capture gap (seen again later), ${fN(cnt('verwijderd'))} deleted/suspended.</div>`+table('lost',[
+    {key:'date',label:'Date',fmt:fD},{key:'handle',label:'Account',fmt:hl},
+    {key:'status',label:'Status',fmt:(v,r)=>{const lb=LOST_LBL[v]||[reasonLbl(v),'p-mut'];return pill(lb[0],lb[1])+(r.verified?' '+verPill(r):'')+(r.reappeared_on?` <span class="note">seen again ${fDs(r.reappeared_on)}</span>`:'');}},
+    {key:'still_following',label:'Still following?',fmt:(v,r)=>yn(v,r.still_following_reason,r.still_following_basis)}],LOST.map(e=>Object.assign({},e)),{key:'date',desc:true},{empty:emptyMsg(S.length<2?'At least 2 snapshots are needed for a diff.':'No unfollowers in this period.')})+'</div></div>';
+  extra+='<h3>Unfollow candidates</h3><div class="note">Unfollowers (confirmed or possible) in this period who are still followed according to the latest following list.</div>';
+  if(!F.latest_following_date)extra+=emptyMsg('Add "following_handles" to a follower snapshot to see who you still follow. Until then every unfollower above is a candidate with status "unknown".');
+  else{const c=LOST.filter(e=>(e.status==='ontvolger'||e.status==='mogelijk')&&e.still_following!==false);
+    if(!F.latest_following_complete)extra+=`<div class="note">Following list incomplete (${fN(F.latest_following_loaded)} of ${fN(F.latest_following_profile)}): unfollowers who are not in the list are shown as "unknown (list incomplete)" — check those by hand.</div>`;
+    extra+=table('cand',[{key:'date',label:'Unfollowed on',fmt:fD},{key:'handle',label:'Account',fmt:hl},{key:'status',label:'Unfollow certainty',fmt:(v,r)=>{const lb=LOST_LBL[v]||[reasonLbl(v),'p-mut'];return pill(lb[0],lb[1])+(r.verified?' '+verPill(r):'');}},{key:'still_following',label:'Still following?',fmt:(v,r)=>yn(v,r.still_following_reason,r.still_following_basis)}],c.map(e=>Object.assign({},e)),{key:'still_following',desc:true},{empty:'<div class="empty">No candidates in this period.</div>'})+`<div class="note">Following list of ${fD(F.latest_following_date)}.</div>`;}
+  const nfb=F.not_following_back;
+  extra+='<h3>You follow them, they don\'t follow back</h3>';
+  if(!nfb)extra+=emptyMsg('Requires "following_handles" in a follower snapshot.');
+  else{extra+=`<div class="note">Based on snapshot ${fD(nfb.date)} (not affected by the period filter). ${fN(nfb.handles.length)} account(s) in the loaded following list are not in the loaded follower list.</div>`;
+    const missF=nfb.followers_profile!=null?Math.max(0,nfb.followers_profile-nfb.followers_loaded):null;
+    if(nfb.following_complete===false)extra+=`<div class="warnbox">Following list incomplete: ${fN(nfb.following_loaded)} of ${fN(nfb.following_profile)} loaded. For the ${nfb.following_profile!=null?fN(Math.max(0,nfb.following_profile-nfb.following_loaded)):'?'} followed accounts that were not loaded, it is unknown whether they follow back; this list is a lower bound.</div>`;
+    if(!nfb.followers_complete)extra+=`<div class="warnbox">Follower list incomplete: ${fN(nfb.followers_loaded)} of ${fN(nfb.followers_profile)} loaded. ${missF!=null?`At most ${fN(missF)} of the accounts below may still`:'Some of the accounts below may still'} follow back but were not loaded — hence "probable".</div>`;
+    extra+=table('nfb',[{key:'handle',label:'Account',fmt:hl},{key:'z',label:'Certainty',nosort:1,fmt:()=>nfb.followers_complete?pill('does not follow back','p-bad'):pill(`probable (follower list ${nfb.followers_loaded}/${nfb.followers_profile??'?'})`,'p-warn')}],nfb.handles.map(x=>({handle:x})),{key:'handle'},{empty:'<div class="empty">Everyone in the loaded following list follows back.</div>'});}
+  extra+='<h3>Deleted / suspended accounts</h3><div class="note">Marked via "unavailable". Not counted as unfollowers.</div>';
+  extra+=table('unav',[{key:'handle',label:'Account',fmt:hl},{key:'first_flagged',label:'Marked on',fmt:fD},{key:'reason',label:'Reason',fmt:v=>esc(reasonLbl(v))},{key:'was_follower',label:'Was a follower?',fmt:v=>v?'yes':'no'}],F.unavailable.map(e=>Object.assign({},e)),{key:'first_flagged',desc:true},{empty:'<div class="empty">No accounts marked as deleted/suspended yet (field "unavailable", see README).</div>'});
+  extra+='<h3>Manually verified unfollowers</h3><div class="note">Field "verified_unfollowers": if that handle leaves the list, they count as <b>unfollowed</b> (confirmed), even with an incomplete capture. "unavailable" takes precedence.</div>';
+  extra+=table('verif',[{key:'handle',label:'Account',fmt:hl},{key:'first_listed',label:'Listed in snapshot',fmt:fD},{key:'checked_at',label:'Checked',fmt:v=>esc(v||'—')},{key:'note',label:'Note',fmt:v=>esc(v||'—')}],(F.verified_unfollowers||[]).map(e=>Object.assign({},e)),{key:'first_listed',desc:true},{empty:'<div class="empty">No manually verified unfollowers yet (field "verified_unfollowers", see README).</div>'});
+  return h+fold('Tables',extra);}
+
+/* ---------- 3. Posts ---------- */
+const TCOL={post:'#1d9bf0',reply:'#00ba7c',repost:'#ffad1f',quote:'#a78bfa'};
+function streakInfo(){const counts=t=>t==='reply'?state.streakReplies:true;const set=new Set(POSTS.filter(p=>counts(p.type)).map(p=>p.local_date));
+  const ref=refDay();let d=ref,note='';if(!set.has(d)){if(ref===TODAY){d=addDays(d,-1);note='not posted today yet; streak through yesterday';}else return {cur:0,note:''};}
+  let n=0;while(set.has(d)){n++;d=addDays(d,-1);}
+  let best=0,run=0;for(const x of dayList(state.start,refDay())){if(set.has(x)){run++;best=Math.max(best,run);}else run=0;}
+  return {cur:n,note,best,set};}
+function sec3(){let h=`<h2>${STR.posts}</h2>`;if(!POSTS.length)return h+EMPTY;
+  const days=dayList(state.start,state.end);const P=POSTS.filter(p=>inR(p.local_date));
+  const ser=['post','reply','repost','quote'].map(t=>({name:TYPE_PL[t],color:TCOL[t],vals:{}}));
+  P.forEach(p=>{const s=ser[['post','reply','repost','quote'].indexOf(p.type)];s.vals[p.local_date]=(s.vals[p.local_date]||0)+1;});
+  const c=t=>P.filter(p=>p.type===t).length;const st=streakInfo();
+  const covS=firstPostDate>state.start?firstPostDate:state.start,covE=refDay();const nod=dayList(covS,covE).filter(d=>!st.set.has(d));
+  h+='<h3>Posts per day</h3>'+barChart(days,ser,{legend:1});
+  h+=`<label class="note"><input type="checkbox" id="streakrep" ${state.streakReplies?'checked':''}> Include replies in streak</label>`;
+  const extra=`<div class="cards">${card('Total in period',fN(P.length))}${card('Posts',fN(c('post')))}${card('Replies',fN(c('reply')))}${card('Reposts',fN(c('repost')))}${card('Quotes',fN(c('quote')))}
+  ${card('Current streak',fN(st.cur)+' d',st.note||'consecutive days posted through '+fDs(refDay()))}${card('Longest streak in period',fN(st.best)+' d')}${card('Days without a post',fN(nod.length),`of ${fN(dayList(covS,covE).length)} days with post-data coverage`)}</div>
+  <h3>Days without a post (${fN(nod.length)})</h3>`+(nod.length?`<div>${nod.slice().reverse().map(d=>pill(fD(d),'p-mut')).join(' ')}</div>`:'<div class="empty">Posted every day in this period.</div>');
+  h+=fold('Streak and types',extra);
+  return h;}
+
+/* ---------- 4. Engagement ---------- */
+const MCOLS_ALL=[['impressions','Impressions'],['likes','Likes'],['replies','Replies'],['reposts','Reposts'],['quotes','Quotes'],['bookmarks','Bookmarks'],['profile_visits','Profile vis.'],['link_clicks','Link clicks'],['new_follows','New followers'],['engagements','Engagements (X)'],['shares','Shares'],['detail_expands','Detail expands'],['hashtag_clicks','Hashtag clicks'],['permalink_clicks','Permalink clicks']];
+const OPTIONAL_M=new Set(['engagements','shares','detail_expands','hashtag_clicks','permalink_clicks']);
+const mcolsFor=a=>MCOLS_ALL.filter(([k])=>!OPTIONAL_M.has(k)||has(a,k));
+const FORMULA='Engagement rate per post = engagements (X) / impressions — if X\'s own "Engagements" is present (marker X)<br>otherwise: (likes + replies + reposts + quotes + bookmarks + profile visits + link clicks) / impressions (marker c = calculated)';
+function sec4(){let h=`<h2>${STR.engagement}</h2>`;
+  if(!POSTS.length)return h+EMPTY;
+  const sel={nonrepost:p=>p.type!=='repost',own:p=>p.type==='post'||p.type==='quote',reply:p=>p.type==='reply'}[state.engType];
+  const P=POSTS.filter(p=>inR(p.local_date)&&sel(p));
+  h+=`<label class="note">Show: <select id="engtype"><option value="nonrepost">all except reposts</option><option value="own">own posts + quotes only</option><option value="reply">replies only</option></select></label>`;
+  if(!P.length)return h+emptyMsg('No posts with this selection in the period.');
+  const nf=P.filter(p=>p.new_follows!=null);const MCOLS=mcolsFor(P);
+  const nX=P.filter(p=>p.er_source==='x').length,nB=P.filter(p=>p.er_source==='berekend').length;
+  const days=dayList(state.start,state.end);const vals={};P.forEach(p=>{if(p.impressions!=null)vals[p.local_date]=(vals[p.local_date]||0)+p.impressions;});
+  h+='<h3>Impressions per day</h3>'+comboChart(days,vals,(function(){const erv={};days.forEach(d=>{const a=P.filter(p=>p.local_date===d);const e=erOf(a);if(e!=null)erv[d]=e;});return erv;})());
+  let extra=`<details class="fold"><summary>Info</summary><div class="formula">${FORMULA}<br>Per day / period: weighted = Σ (X engagements or calculated, per post) / Σ impressions (posts without impressions are excluded). Reposts are excluded (their metrics belong to the original post).</div><div class="note">ER source: <span class="pill p-ok">X</span> ${fN(nX)} · <span class="pill p-mut">c</span> ${fN(nB)}</div></details>`;
+  extra+='<div class="cards" style="margin-top:10px">'+card('Posts',fN(P.length))+MCOLS.map(([k,l])=>card(l,has(P,k)?fN(sum(P,k)):'—')).join('')+card('Engagement rate (weighted)',fP(erOf(P)))+card('Avg. impressions / post',has(P,'impressions')?f1(sum(P,'impressions')/P.filter(p=>p.impressions!=null).length):'—')+card('Avg. new followers / post',nf.length?f1(sum(nf,'new_follows')/nf.length):'—',nf.length?`over ${nf.length} post(s) with new_follows`:'no new_follows data')+'</div>';
+  extra+='<h3>From profile visit to follower</h3>';
+  const C=POSTS.filter(p=>inR(p.local_date)&&p.type!=='repost');
+  const vis=has(C,'profile_visits')?sum(C,'profile_visits'):null,fol=has(C,'new_follows')?sum(C,'new_follows'):null,imp=has(C,'impressions')?sum(C,'impressions'):null;
+  const conv=(vis&&vis>0&&fol!=null)?fol/vis:null,v1k=(imp&&imp>0&&vis!=null)?vis*1000/imp:null,f1k=(imp&&imp>0&&fol!=null)?fol*1000/imp:null;
+  extra+=`<div class="cards">${card('Conversion (period)',fP(conv),vis!=null&&fol!=null?`${fN(fol)} followers / ${fN(vis)} visits`:'no data')}${card('Profile visits / 1,000 impr.',f1(v1k),imp!=null?`${fN(vis)} visits · ${fN(imp)} impr.`:'')}${card('New followers / 1,000 impr.',f1(f1k),imp!=null?`${fN(fol)} followers · ${fN(imp)} impr.`:'')}</div>`;
+  const weeks=isoWeeks(state.start,state.end);const byW={};C.forEach(p=>{const w=isoWeek(p.local_date);(byW[w]=byW[w]||[]).push(p);});
+  const convV={},vis1kV={},fol1kV={},wrows=[];
+  for(const w of weeks){const a=byW[w]||[];const wv=has(a,'profile_visits')?sum(a,'profile_visits'):null,wf=has(a,'new_follows')?sum(a,'new_follows'):null,wi=has(a,'impressions')?sum(a,'impressions'):null;
+    const wc=(wv&&wv>0&&wf!=null)?wf/wv:null,wvis=(wi&&wi>0&&wv!=null)?wv*1000/wi:null,wfol=(wi&&wi>0&&wf!=null)?wf*1000/wi:null;
+    if(wc!=null)convV[w]=wc;if(wvis!=null)vis1kV[w]=wvis;if(wfol!=null)fol1kV[w]=wfol;
+    wrows.push({w,label:weekLbl(w),visits:wv,follows:wf,impr:wi,conv:wc,vis1k:wvis,fol1k:wfol,n:a.length});}
+  const wkOpt={xlab:weekLbl,tlab:weekLbl,h:180,half:1};
+  const c1=lineChart(weeks,[{name:'Conversion',color:'#00ba7c',vals:convV,tip:(w,v)=>{const r=wrows.find(x=>x.w===w)||{};return `Conversion ${weekLbl(w)}: ${fP(v)} (${fN(r.follows)} followers / ${fN(r.visits)} visits, n=${fN(r.n)})`;}}],Object.assign({pct:1,zero:1},wkOpt));
+  const c2=lineChart(weeks,[{name:'Visits / 1k impr.',color:'#1d9bf0',vals:vis1kV,tip:(w,v)=>{const r=wrows.find(x=>x.w===w)||{};return `${weekLbl(w)}: ${f1(v)} visits/1k (${fN(r.visits)} visits / ${fN(r.impr)} impr.)`;}},{name:'Followers / 1k impr.',color:'#ffad1f',vals:fol1kV,tip:(w,v)=>{const r=wrows.find(x=>x.w===w)||{};return `${weekLbl(w)}: ${f1(v)} followers/1k (${fN(r.follows)} followers / ${fN(r.impr)} impr.)`;}}],Object.assign({vfmt:f1},wkOpt));
+  extra+=`<div class="grid2"><div><h3>Conversion per week</h3>${c1||emptyMsg('No conversion per week.')}</div><div><h3>Visits and followers per 1,000 impressions</h3>${c2||emptyMsg('No impressions in this period.')}</div></div>`;
+  extra+='<h3>Per ISO week</h3>'+table('convw',[{key:'label',label:'Week'},{key:'n',label:'n',num:1,fmt:fN},{key:'visits',label:'Profile visits',num:1,fmt:fN},{key:'follows',label:'New followers',num:1,fmt:fN},{key:'impr',label:'Impressions',num:1,fmt:fN},{key:'conv',label:'Conversion',num:1,fmt:fP},{key:'vis1k',label:'Visits / 1k',num:1,fmt:f1},{key:'fol1k',label:'Followers / 1k',num:1,fmt:f1}],wrows,null,{empty:emptyMsg('No weeks in this period.')});
+  const byDay={};P.forEach(p=>{(byDay[p.local_date]=byDay[p.local_date]||[]).push(p);});
+  const drows=Object.keys(byDay).map(d=>{const a=byDay[d];const r={date:d,n:a.length,er:erOf(a),nx:a.filter(p=>p.er_source==='x').length};MCOLS.forEach(([k])=>r[k]=has(a,k)?sum(a,k):null);return r;});
+  extra+='<h3>Per day</h3>'+table('engday',[{key:'date',label:'Date',fmt:fD},{key:'n',label:'Posts',num:1,fmt:fN}].concat(MCOLS.map(([k,l])=>({key:k,label:l,num:1,fmt:fN}))).concat([{key:'er',label:'ER',num:1,fmt:(v,r)=>fP(v)+(r.nx===r.n?' <span class="note">X</span>':r.nx?` <span class="note" title="${r.nx} of ${r.n} posts with X engagements">mixed</span>`:' <span class="note">c</span>')}]),drows,{key:'date',desc:true});
+  extra+='<h3>Per post</h3>'+table('engpost',[{key:'created_at',label:'Date/time',fmt:(v,r)=>fD(r.local_date)+' '+(r.local_time||'<span class="note" title="Source contains a date only">time unknown</span>')},{key:'type',label:'Type',fmt:(v,r)=>typeCell(r)},{key:'media',label:'Media',fmt:v=>esc(mediaNL(v))},{key:'text',label:'Text',cls:'txt',fmt:(v,r)=>postLink(r)}].concat(MCOLS.map(([k,l])=>({key:k,label:l,num:1,fmt:fN}))).concat([{key:'er',label:'ER',num:1,fmt:erCell}]),P.map(p=>Object.assign({},p)),{key:'created_at',desc:true});
+  if(P.some(p=>p.type_inferred))extra+='<div class="note">* type inferred from the text (CSV without a type column): starts with "@" → reply, "RT @" → repost, otherwise post.</div>';
+  h+=fold('Tables and conversion',extra);
+  return h;}
+
+/* ---------- 5. Reply activity ---------- */
+function sec5(){let h=`<h2>${STR.replies}</h2>`;if(!POSTS.length)return h+EMPTY;
+  const R=POSTS.filter(p=>inR(p.local_date)&&p.type==='reply');const RO=R.filter(p=>!p.self_reply),RS=R.filter(p=>p.self_reply);
+  const OWN=POSTS.filter(p=>inR(p.local_date)&&(p.type==='post'||p.type==='quote'));
+  const days=dayList(state.start,state.end);const v1={},v2={};RO.forEach(p=>v1[p.local_date]=(v1[p.local_date]||0)+1);RS.forEach(p=>v2[p.local_date]=(v2[p.local_date]||0)+1);
+  const nAcc=IS_PUBLIC?REPLY_BUCKETS.reduce((t,b)=>t+(b.n_accounts||0),0):new Set(RO.map(p=>(p.in_reply_to_handle||'?').toLowerCase())).size;
+  if(!R.length)h+=emptyMsg('No replies (type "reply") in this period.');
+  else h+='<h3>Replies per day</h3>'+barChart(days,[{name:'To others',color:'#00ba7c',vals:v1},{name:'To own posts',color:'#8b98a5',vals:v2}]);
+  let extra=`<div class="cards">${card('Replies to others',fN(RO.length),IS_PUBLIC?`${fN(nAcc)} accounts in shown groups`:`${fN(nAcc)} unique accounts`)}${card('Replies to own posts',fN(RS.length),'e.g. threads (kept separate)')}${card('Avg. per day (to others)',f1(RO.length/Math.max(1,dayList(state.start,refDay()).length)))}
+  ${card('Impressions (replies to others)',has(RO,'impressions')?fN(sum(RO,'impressions')):'—')}${card('Likes',has(RO,'likes')?fN(sum(RO,'likes')):'—')}${card('Replies on them',has(RO,'replies')?fN(sum(RO,'replies')):'—')}${card('Profile visits',has(RO,'profile_visits')?fN(sum(RO,'profile_visits')):'—')}${card('New followers',has(RO,'new_follows')?fN(sum(RO,'new_follows')):'—')}
+  ${card('Replies received on own posts',has(OWN,'replies')?fN(sum(OWN,'replies')):'—',`sum of "replies" on ${fN(OWN.length)} own posts/quotes`)}</div>`;
+  if(R.length){
+    if(IS_PUBLIC){
+      const kind=META.reply_bucket_kind==='frequency'?'reply frequency (1× / 2–4× / 5×+)':'follower size of the target account';
+      extra+='<h3>Replies by audience</h3>';
+      extra+=table('rbkt',[{key:'label',label:'Group'},{key:'n_replies',label:'Replies',num:1,fmt:fN},{key:'n_accounts',label:'Accounts',num:1,fmt:fN},{key:'mean_impressions',label:'Avg. impr./reply',num:1,fmt:f1},{key:'median_impressions',label:'Med. impr./reply',num:1,fmt:f1},{key:'visits_per_reply',label:'Profile visits/reply',num:1,fmt:f1},{key:'follows_per_reply',label:'New followers/reply',num:1,fmt:f1}],REPLY_BUCKETS,{key:'n_replies',desc:true},{empty:emptyMsg('No groups with at least 5 accounts.')});
+      extra+=`<div class="note" title="Aggregated by ${esc(kind)}. Groups with fewer than 5 accounts omitted.">No handles.</div>`;
+    }else{
+    const by={};RO.forEach(p=>{const k=p.in_reply_to_handle||'(unknown)';const o=by[k.toLowerCase()]=by[k.toLowerCase()]||{handle:k,n:0,impressions:0,likes:0,new_follows:0,profile_visits:0,eng:0,erImp:0,imps:[]};o.n++;if(p.impressions!=null){o.impressions+=p.impressions;o.imps.push(p.impressions);}o.likes+=p.likes||0;o.new_follows+=p.new_follows||0;o.profile_visits+=p.profile_visits||0;if(p.impressions>0&&p.eng_used!=null){o.eng+=p.eng_used;o.erImp+=p.impressions;}});
+    const rows=Object.values(by).map(o=>{o.meanImp=o.imps.length?o.impressions/o.imps.length:null;o.medImp=med(o.imps);o.er=o.erImp?o.eng/o.erImp:null;o.nfPer=o.n?o.new_follows/o.n:null;o.lowRoi=o.n>=LOW_ROI_N&&o.meanImp!=null&&o.meanImp<LOW_ROI_IMP;return o;});
+    const topFol=[...rows].filter(r=>r.new_follows>0).sort((a,b)=>b.new_follows-a.new_follows||(b.nfPer||0)-(a.nfPer||0)).slice(0,10);
+    const topImp=[...rows].filter(r=>r.n>=ROI_TOP_N&&r.meanImp!=null).sort((a,b)=>b.meanImp-a.meanImp).slice(0,10);
+    const folSet=new Set(topFol.map(r=>r.handle.toLowerCase())),impSet=new Set(topImp.map(r=>r.handle.toLowerCase()));
+    rows.forEach(r=>{r.topFol=folSet.has(r.handle.toLowerCase());r.topImp=impSet.has(r.handle.toLowerCase());r._cls=r.lowRoi?'roi-low':(r.topFol?'roi-top':'');});
+    extra+='<h3>Reply ROI by account</h3>';
+    extra+=`<label class="note">Filter: <input type="search" id="roi-q" value="${esc(state.roiQ||'')}" placeholder="@handle" autocomplete="off"></label>`;
+    extra+=table('rroi',[{key:'handle',label:'Account',fmt:v=>v==='(unknown)'?'<span class="note">unknown (in_reply_to_handle missing)</span>':hl(v)},{key:'n',label:'Replies',num:1,fmt:fN},{key:'impressions',label:'Impressions',num:1,fmt:fN},{key:'meanImp',label:'Avg. impr./reply',num:1,fmt:f1},{key:'medImp',label:'Med. impr./reply',num:1,fmt:f1},{key:'er',label:'ER',num:1,fmt:fP},{key:'profile_visits',label:'Profile visits',num:1,fmt:fN},{key:'new_follows',label:'New followers',num:1,fmt:fN},{key:'nfPer',label:'Followers/reply',num:1,fmt:f1},{key:'flags',label:'Flags',fmt:(_,r)=>{let s='';if(r.lowRoi)s+=pill('high effort, low reach','p-bad')+' ';if(r.topFol)s+=pill('best follower source','p-ok')+' ';if(r.topImp)s+=pill('best reach','p-vio');return s.trim()||'—';}}],rows,{key:'new_follows',desc:true},{empty:emptyMsg('Replies to own posts only.'),wrapId:'roi-wrap',rowAttr:r=>` data-handle="${esc((r.handle||'').toLowerCase())}"`});
+    extra+='<div class="grid2"><div><h3>Which accounts (totals)</h3>'+table('racc',[{key:'handle',label:'Account',fmt:v=>v==='(unknown)'?'<span class="note">unknown (in_reply_to_handle missing)</span>':hl(v)},{key:'n',label:'Replies',num:1,fmt:fN},{key:'impressions',label:'Impressions',num:1,fmt:fN},{key:'likes',label:'Likes',num:1,fmt:fN},{key:'profile_visits',label:'Profile vis.',num:1,fmt:fN},{key:'new_follows',label:'New followers',num:1,fmt:fN}],rows,{key:'n',desc:true},{empty:emptyMsg('Replies to own posts only.')})+'</div>';
+    extra+='<div><h3>Best performing replies</h3>'+table('rbest',[{key:'local_date',label:'Date',fmt:fD},{key:'in_reply_to_handle',label:'To',fmt:hl},{key:'text',label:'Text',cls:'txt',fmt:(v,r)=>postLink(r)},{key:'impressions',label:'Impr.',num:1,fmt:fN},{key:'likes',label:'Likes',num:1,fmt:fN},{key:'replies',label:'Replies',num:1,fmt:fN},{key:'profile_visits',label:'Prof.',num:1,fmt:fN},{key:'new_follows',label:'Followers',num:1,fmt:fN},{key:'er',label:'ER',num:1,fmt:erCell}],RO.map(p=>Object.assign({},p)),{key:'impressions',desc:true},{limit:10,empty:emptyMsg('No replies to others.')})+'</div></div>';
+    }}
+  const rv={};OWN.forEach(p=>{if(p.replies!=null)rv[p.local_date]=(rv[p.local_date]||0)+p.replies;});
+  if(Object.keys(rv).length)extra+='<h3>Replies received</h3>'+barChart(days,[{name:'Replies received',color:'#a78bfa',vals:rv}]);
+  h+=fold('Tables',extra);
+  return h;}
+
+/* ---------- 6. Top posts & patterns ---------- */
+
+function postsExplorer(rows){
+  const q=(state.topQ||'').trim().toLowerCase();
+  let r=rows.map(p=>({created_at:p.created_at,local_date:p.local_date,local_time:p.local_time,text:p.text||'',impressions:p.impressions,eng_used:p.eng_used,er:p.er,replies:p.replies,url:p.url,id:p.id,er_source:p.er_source,type:p.type,media:p.media}));
+  if(q) r=r.filter(p=> (p.local_date||'').includes(q) || (p.text||'').toLowerCase().includes(q) || String(p.impressions??'').includes(q) || String(p.eng_used??'').includes(q) || String(p.replies??'').includes(q) || (p.er!=null&&fP(p.er).toLowerCase().includes(q)));
+  const st=SORT.ptop||{key:'impressions',desc:true};
+  r.sort((a,b)=>{const va=a[st.key],vb=b[st.key];if(va==null&&vb!=null)return 1;if(vb==null&&va!=null)return -1;return cmp(va,vb)*(st.desc?-1:1);});
+  const pageSize=10;const pages=Math.max(1,Math.ceil(r.length/pageSize));
+  if(state.topPage>=pages) state.topPage=pages-1;
+  if(state.topPage<0) state.topPage=0;
+  const slice=r.slice(state.topPage*pageSize,(state.topPage+1)*pageSize);
+  const cols=[
+    {key:'local_date',label:'Date',fmt:(v,row)=>fDs(v)+'<span class="c-time"> '+(row.local_time||'')+'</span>'},
+    {key:'text',label:'Text',cls:'txt',fmt:(v,row)=>postLink(row)},
+    {key:'impressions',label:'Impressions',num:1,fmt:fN},
+    {key:'eng_used',label:'Engagements',num:1,cls:'c-extra',fmt:fN},
+    {key:'er',label:'Rate',num:1,cls:'c-extra',fmt:erCell},
+    {key:'replies',label:'Replies',num:1,cls:'c-extra',fmt:fN}
+  ];
+  SORT.ptop=st;
+  const tbl=table('ptop',cols,slice,st,{empty:emptyMsg('Not enough data yet'),wrapId:'top-wrap',wrapClass:'top-full'});
+  return `<h3>Top posts</h3><div class="table-tools"><input type="search" id="top-q" value="${esc(state.topQ||'')}" placeholder="Search date, text, impressions…" autocomplete="off"></div>${tbl}<div class="pager"><button type="button" id="top-prev" ${state.topPage<=0?'disabled':''}>Prev</button><span>${state.topPage+1} / ${pages}</span><button type="button" id="top-next" ${state.topPage>=pages-1?'disabled':''}>Next</button></div>`;
+}
+function topList(a,key,n){return a.filter(p=>p[key]!=null&&(key!=='er'||p.impressions>0)).sort((x,y)=>y[key]-x[key]).slice(0,n);}
+function topKind(p){const raw=p.media;if(!raw||raw==='unknown')return '';const ml=mediaNL(raw);if(!ml||ml==='unknown')return '';const tp=TYPE_NL[p.type]||p.type||'';return tp?`${esc(tp)} · ${esc(ml)}`:esc(ml);}
+function miniTop(a,key){const t=topList(a,key,5);if(!t.length)return EMPTY;return '<div class="tw mini-top"><table><colgroup><col class="rank"><col><col class="metrics"></colgroup><tbody>'+t.map((p,i)=>{const primary=key==='er'?fP(p.er):fN(p.impressions)+' impr.';const secondary=key==='er'?fN(p.impressions)+' impr.':fP(p.er);const kind=topKind(p);const when=`${fDs(p.local_date)} ${p.local_time||''}`.trim();const meta=[when,kind].filter(Boolean).join(' · ');return `<tr><td class="num">${i+1}</td><td class="txt">${postLink(p)}<div class="top-meta">${meta}<span class="top-metrics"> · ${primary}</span></div></td><td class="met mini-top-metric">${primary}</td></tr>`;}).join('')+'</tbody></table></div>';}
+function groupTable(tid,groups,labelFn){const rows=groups.map(([k,a])=>{const imps=a.filter(p=>p.impressions!=null).map(p=>p.impressions);return{k,label:labelFn(k),n:a.length,avg:imps.length?imps.reduce((t,v)=>t+v,0)/imps.length:null,med:med(imps),er:erOf(a),nf:has(a,'new_follows')?sum(a,'new_follows')/a.filter(p=>p.new_follows!=null).length:null};});
+  let best=null;rows.forEach(r=>{if(r.med!=null&&(!best||r.med>best.med||(r.med===best.med&&(r.avg||0)>(best.avg||0))))best=r;});if(best)best._cls='best';
+  return {html:table(tid,[{key:'label',label:'',fmt:v=>esc(v)},{key:'n',label:'n',num:1,fmt:fN},{key:'avg',label:'Avg. impressions',num:1,fmt:f1},{key:'med',label:'Median impressions',num:1,fmt:f1},{key:'er',label:'ER (weighted)',num:1,fmt:fP},{key:'nf',label:'Avg. new followers',num:1,fmt:f1}],rows,null),best};}
+function sec6(){let h=`<h2>${STR.patterns}</h2>`;
+  if(!POSTS.length)return h+EMPTY;
+  const O=POSTS.filter(p=>inR(p.local_date)&&(p.type==='post'||p.type==='quote'));if(!O.length)return h+emptyMsg('No own posts/quotes in this period.');
+  const grp=(f)=>{const g={};O.forEach(p=>{const k=f(p);(g[k]=g[k]||[]).push(p);});return Object.entries(g);};
+  const weeks=grp(p=>isoWeek(p.local_date)).sort((a,b)=>b[0].localeCompare(a[0]));const months=grp(p=>p.local_date.slice(0,7)).sort((a,b)=>b[0].localeCompare(a[0]));
+  const blk=(title,list,lab)=>`<h3>${title}</h3>`+list.map(([k,a])=>`<details><summary>${lab(k)} <span class="note">(${a.length} posts)</span></summary><div class="grid2"><div><h3>Top 5 by impressions</h3>${miniTop(a,'impressions')}</div><div><h3>Top 5 by engagement rate</h3>${miniTop(a,'er')}</div></div></details>`).join('');
+  h+=`<div class="grid2"><div><h3>Top 5</h3>${miniTop(O,'impressions')}</div><div><h3>Top 5 by ER</h3>${miniTop(O,'er')}</div></div>`;
+  h+=postsExplorer(O);
+  h+=heatPanel('Best time to post',O,a=>{const e=med(a.map(p=>p.er));return e!=null?e:med(a.map(p=>p.impressions));});
+  const wd=groupTable('pwd',[0,1,2,3,4,5,6].map(i=>[i,O.filter(p=>p.weekday===i)]).filter(x=>x[1].length),k=>WDL[k]);
+  const hrs=groupTable('phr',Array.from({length:24},(_,i)=>[i,O.filter(p=>p.hour===i)]).filter(x=>x[1].length),k=>String(k).padStart(2,'0')+':00–'+String(k).padStart(2,'0')+':59');
+  const md=groupTable('pmd',['text','image','video','thread'].map(m=>[m,O.filter(p=>p.media===m)]).filter(x=>x[1].length),k=>mediaNL(k));
+  const noTime=O.filter(p=>p.hour==null).length,noMedia=O.filter(p=>!p.media).length;
+  const bl=(b)=>b?`avg. ${f1(b.avg)} · med. ${f1(b.med)} · n=${b.n}`:'';
+  let extra=blk('Top 5 per week',weeks,k=>'Week '+k.slice(6)+' ('+k.slice(0,4)+')');
+  extra+=blk('Top 5 per month',months,k=>MON[+k.slice(5,7)-1]+' '+k.slice(0,4));
+  extra+=`<div class="cards" style="margin-top:12px">${card('Best day of the week',wd.best?esc(wd.best.label):'—',wd.best?bl(wd.best):'')}${card('Best time (Amsterdam)',hrs.best?esc(hrs.best.label.slice(0,5)):'—',hrs.best?bl(hrs.best):'no times known (export contains dates only, unless the post id supplied a snowflake time)')}${card('Best post type',md.best?esc(md.best.label):'—',md.best?bl(md.best):'no media info')}</div>`;
+  extra+=`<div class="grid2"><div><h3>Per day of the week</h3>${wd.html}${noTime?`<div class="note">Including ${fN(noTime)} post(s) with a date only (weekday is still known).</div>`:''}</div><div><h3>Per time of day (Europe/Amsterdam)</h3>${noTime===O.length?'<div class="empty">No timestamps known: the X export contains only a date per post (e.g. "Fri, Sep 25, 2026"), not a time. Supply <code>created_at</code> with a time via data/posts/ to fill this in.</div>':hrs.html+(noTime?`<div class="note">${fN(noTime)} post(s) with a date only (export without time) are not counted here.</div>`:'')}</div></div><h3>Per post type (media)</h3>${noMedia===O.length?'<div class="empty">No media info: the X export has no media column. Supply <code>media</code> (text/image/video/thread) via data/posts/ to fill this in.</div>':md.html+(noMedia?`<div class="note">${fN(noMedia)} post(s) without media info not counted.</div>`:'')}`;
+  h+=fold('By week, day, and type',extra);
+  return h;}
+
+/* ---------- 7. What works best ---------- */
+function slotLbl(wd,hr){return WD[wd]+' '+String(hr).padStart(2,'0')+':00–'+String(hr).padStart(2,'0')+':59';}
+function lowNote(n){return n<MINN?` <span class="pill p-warn">too little data</span>`:'';}
+function grpRows(items,keyFn){const g={};for(const p of items){const k=keyFn(p);if(k==null||k==='')continue;(g[k]=g[k]||[]).push(p);}return Object.keys(g).sort().map(k=>{const a=g[k],n=a.length;return{k,n,low:n<MINN,_cls:n<MINN?'lowdata':'',medImp:med(a.map(p=>p.impressions)),medEr:med(a.map(p=>p.er)),medLikes:med(a.map(p=>p.likes)),medReplies:med(a.map(p=>p.replies)),medReposts:med(a.map(p=>p.reposts)),medBm:med(a.map(p=>p.bookmarks)),vis1k:med(a.map(p=>p.visits_per_1k)),fol1k:med(a.map(p=>p.follows_per_1k))};});}
+function insightCols(label){return[{key:'label',label:label,fmt:(v,r)=>esc(v)+lowNote(r.n)},{key:'n',label:'n',num:1,fmt:fN},{key:'medImp',label:'Median impr.',num:1,fmt:f1},{key:'medEr',label:'Median ER',num:1,fmt:fP},{key:'medLikes',label:'Med. likes',num:1,fmt:f1},{key:'medReplies',label:'Med. replies',num:1,fmt:f1},{key:'medReposts',label:'Med. reposts',num:1,fmt:f1},{key:'medBm',label:'Med. bookmarks',num:1,fmt:f1},{key:'vis1k',label:'Profile vis. / 1k impr.',num:1,fmt:f1},{key:'fol1k',label:'New followers / 1k impr.',num:1,fmt:f1}];}
+function miniBars(rows,valKey){const vis=rows.filter(r=>r[valKey]!=null);if(!vis.length)return '';const mx=Math.max(1,...vis.map(r=>r[valKey]));const n=vis.length;
+  const displayW=chartDisplayWidth(false);const iw=typeof innerWidth==='undefined'?displayW:innerWidth;const narrow=iw<=640;
+  const catFont=narrow?11:12;
+  const labels=vis.map(r=>String(r.label||''));
+  const maxCat=narrow?Math.min(118,Math.floor(displayW*0.40)):160;
+  const catW=yCatLabelWidth(labels,catFont,maxCat);
+  const H=Math.max(120,12+n*(narrow?30:24)+8);
+  const theme=typeof document!=='undefined'&&document.documentElement.getAttribute('data-theme')==='light';
+  const outside=theme?'#111827':'#e8eef3';
+  const option={
+    animationDuration:240,
+    tooltip:{trigger:'axis',confine:true,appendToBody:false,axisPointer:{type:'shadow'},formatter:p=>{
+      const r=vis[p[0].dataIndex];return `${esc(r.label)} · n=${fN(r.n)} · ${metricBarLabel(r,valKey)}`;
+    }},
+    grid:{left:8,right:narrow?20:28,top:8,bottom:8,containLabel:true},
+    xAxis:{type:'value',axisLabel:{formatter:v=>axFmt(v)}},
+    yAxis:{type:'category',data:labels,inverse:true,axisTick:{show:false},axisLabel:{
+      fontSize:catFont,width:catW,overflow:'truncate',ellipsis:'…',hideOverlap:false,margin:8
+    }},
+    series:[{
+      type:'bar',
+      data:vis.map(r=>{
+        const v=r[valKey];
+        const short=metricBarShort(r,valKey);
+        const inside=(v/mx)>=(narrow?0.38:0.32);
+        return {
+          value:v,
+          itemStyle:{color:r.low?'#64748b':'#3b82f6',opacity:r.low?0.45:1},
+          label:{show:true,position:inside?'insideRight':'right',formatter:short,fontSize:narrow?10:11,color:inside?'#fff':outside,distance:inside?4:6}
+        };
+      }),
+      barMaxWidth:18
+    }]
+  };
+  return enqueueChart('hbar',option,H,'echart-hbar');}
+function metricBarShort(r,valKey){if(!r)return '';if(valKey==='medEr')return r.medEr==null?'—':fP(r.medEr);return compactN(r[valKey]);}
+function metricBarLabel(r,valKey){if(!r)return '';if(valKey==='medEr')return 'median '+(r.medEr==null?'—':fP(r.medEr))+' ER';const v=r[valKey];return 'median '+(v==null?'—':fN(Math.round(v)))+' impressions';}
+function heatSvg(posts,valFn,kind){const cells={};for(const p of posts){if(p.hour==null||p.weekday==null)continue;const k=p.weekday+'-'+p.hour;(cells[k]=cells[k]||[]).push(p);}
+  const stats={};const cellVals=[];for(let d=0;d<7;d++)for(let h=0;h<24;h++){const a=cells[d+'-'+h]||[];const n=a.length,val=n?valFn(a):null;if(val!=null)cellVals.push(val);stats[d+'-'+h]={n,val,er:med(a.map(p=>p.er)),imp:med(a.map(p=>p.impressions)),impMean:mean(a.map(p=>p.impressions)),vis:med(a.map(p=>p.profile_visits)),fol:med(a.map(p=>p.new_follows))};}
+  const rng=heatRange(cellVals);
+  const displayW=chartDisplayWidth(false);const iw=typeof innerWidth==='undefined'?displayW:innerWidth;const narrow=iw<=640;
+  const hourStep=narrow?6:3;const hours=Array.from({length:24},(_,h)=>String(h).padStart(2,'0'));
+  const data=[];
+  for(let d=0;d<7;d++)for(let h=0;h<24;h++){
+    const s=stats[d+'-'+h];
+    data.push([h,d,s.n&&s.val!=null?s.val:null,s]);
+  }
+  const gapColor=document.documentElement.getAttribute('data-theme')==='light'?'#eef2f6':'#0b0f14';
+  const emptyC=heatEmptyColor();const lowC=heatLowColor();
+  const mapped=data.map(r=>{
+    const raw=r[2];const t=heatMapped(raw,rng.min,rng.max);
+    return {value:[r[0],r[1],t==null?0:t],raw,stats:r[3],empty:t==null,itemStyle:t==null?{color:emptyC}:undefined};
+  });
+  const option={
+    animationDuration:240,
+    tooltip:{confine:true,formatter:p=>{
+      const raw=p.data||{};const s=(raw&&raw.stats)||{};const d=(raw.value||[])[1],h=(raw.value||[])[0];
+      const hh=String(h).padStart(2,'0')+':00';
+      const n=s.n||0;
+      const unit=pluralize(n,kind==='reply'?'reply':'post');
+      const bits=[WD[d]+' '+hh, n+' '+unit];
+      if(s.imp!=null) bits.push('median '+fN(Math.round(s.imp))+' impr.');
+      return bits.join(' · ');
+    }},
+    grid:{left:narrow?4:8,right:8,top:8,bottom:28,containLabel:true},
+    xAxis:{type:'category',data:hours,axisLabel:{interval:hourStep-1,fontSize:11}},
+    yAxis:{type:'category',data:WD,inverse:true,axisLabel:{fontSize:11}},
+    visualMap:{show:false,min:0,max:1,inRange:{color:heatColors()}},
+    series:[{type:'heatmap',data:mapped,itemStyle:{borderRadius:3,borderColor:gapColor,borderWidth:2},emphasis:{itemStyle:{borderColor:'#e8eef3',borderWidth:1}}}]
+  };
+  option.__xdashHeat={min:rng.min,max:rng.max,low:lowC,empty:emptyC,card:heatTheme()==='light'?'#ffffff':'#121820'};
+  return {html:`<div class="hmwrap">${enqueueChart('heat',option,narrow?220:240,'echart-heat')}</div>`,stats};}
+
+const HEAT_MIN_COV=0.25;
+function heatCoverage(stats,minN){minN=minN==null?MINN:minN;let ok=0,n=0;for(let d=0;d<7;d++)for(let h=0;h<24;h++){n++;if(((stats[d+'-'+h]||{}).n||0)>=minN)ok++;}return n?ok/n:0;}
+function heatPanel(title,posts,valFn){if(!posts||!posts.length)return fold(title,EMPTY);if(posts.every(p=>p.hour==null))return fold(title,'<div class="empty">No timestamps</div>');const heat=heatSvg(posts,valFn,/reply/i.test(title)?'reply':'post');const body=heatCoverage(heat.stats)<HEAT_MIN_COV?'<div class="note">Not enough data yet</div>':heat.html;return fold(title,body);}
+function heatCard(title,posts,valFn,kind){
+  if(!posts||!posts.length)return `<h3>${esc(title)}</h3>`+EMPTY;
+  if(posts.every(p=>p.hour==null))return `<h3>${esc(title)}</h3>`+emptyMsg('No timestamps');
+  const heat=heatSvg(posts,valFn,kind||(/reply/i.test(title)?'reply':'post'));
+  return `<h3>${esc(title)}</h3>`+heat.html;
+}
+function topSlots(stats,n=3){const rows=[];for(let d=0;d<7;d++)for(let h=0;h<24;h++){const s=stats[d+'-'+h];if(!s||s.n<MINN||s.val==null)continue;rows.push({d,h,label:slotLbl(d,h),...s});}
+  rows.sort((a,b)=>b.val-a.val||b.n-a.n);return rows.slice(0,n);}
+function missingNotes(P){const notes=[];if(!P.length)return notes;
+  const noTime=P.filter(p=>p.hour==null).length;
+  if(noTime)notes.push(`${fN(noTime)} post(s) have no timestamp (date only, or the snowflake id did not match the CSV date). Heatmaps use <code>created_at</code> with a time, or the time from the X snowflake (Post id / <code>/status/&lt;id&gt;</code>).`);
+  const noMedia=P.filter(p=>p.media_source==='missing').length;
+  if(noMedia===P.length)notes.push('No media field in the source. The X content export has no media column. Optionally set <code>media</code> in data/posts (text / image / multi_image / video / gif / poll / link / article). Only an external URL in the text is inferred as “link”; otherwise it stays unknown.');
+  else if(noMedia)notes.push(`${fN(noMedia)} post(s) without a media field (count as unknown, unless the text contains an external URL).`);
+  const inf=P.filter(p=>p.type_inferred).length;
+  if(inf)notes.push(`${fN(inf)} post(s) without an explicit <code>type</code> (inferred from the text). For a reliable type comparison: field <code>type</code> in JSON or a Type column in the CSV.`);
+  const replies=P.filter(p=>p.type==='reply'&&!p.self_reply);
+  const withParent=replies.filter(p=>p.reply_speed);
+  if(replies.length&&!withParent.length)notes.push('Reply speed is not available in the current data. Optionally add <code>in_reply_to_created_at</code> (timestamp of the post being replied to) — see README. A parent time is never guessed.');
+  return notes;}
+function autoSummary(own,replies,mediaRows){const bits=[];
+  const ownHeat=heatSvg(own,a=>med(a.map(p=>p.er))??med(a.map(p=>p.impressions)));
+  const tops=topSlots(ownHeat.stats,3);
+  if(tops.length)bits.push('Best time to post: '+tops.map(t=>t.label+' (n='+t.n+')').join(', ')+'.');
+  const rHeat=heatSvg(replies,a=>med(a.map(p=>p.impressions)));
+  const rTop=topSlots(rHeat.stats,3);
+  if(rTop.length)bits.push('Best time to reply: '+rTop.map(t=>t.label+' (n='+t.n+')').join(', ')+'.');
+  const video=mediaRows.find(r=>r.k==='video'&&!r.low),text=mediaRows.find(r=>r.k==='text'&&!r.low);
+  if(video&&text&&text.medImp>0&&video.medImp!=null){const x=video.medImp/text.medImp;bits.push(`Video outperforms text-only by ${f1(x)}× on median impressions (n=${video.n} vs ${text.n}).`);}
+  if(!bits.length)return `Too little data (n &lt; ${MINN} per group) for a summary.`;
+  return bits.join(' ');}
+function secBest(){
+  let h=`<h2>${STR.best}</h2>`;
+  if(!POSTS.length)return h+EMPTY;
+  const P=POSTS.filter(p=>inR(p.local_date));
+  if(!P.length)return h+emptyMsg('No posts in this period.');
+  const own=P.filter(p=>p.type==='post'||p.type==='quote');
+  const replies=P.filter(p=>p.type==='reply'&&!p.self_reply);
+  const cmp=P.filter(p=>p.type!=='repost');
+  const mediaRows=grpRows(cmp,p=>p.media_kind||'unknown').map(r=>Object.assign(r,{label:MK_NL[r.k]||r.k}));
+  if(replies.length){
+    h+=heatPanel('Best reply time',replies,a=>med(a.map(p=>p.impressions)));
+  }
+  let extra='<div class="disc">Correlation in the supplied data, not proof of causation. Figures are <b>median</b> (not mean). Groups with n &lt; '+MINN+' are grey with “too little data”. Times in Europe/Amsterdam. The period filter above applies here too.</div>';
+  extra+=`<div class="warnbox">${autoSummary(own,replies,mediaRows)}</div>`;
+  for(const n of missingNotes(P))extra+=`<div class="note">${n}</div>`;
+
+  extra+='<h3>Best times to post</h3>';
+  if(!own.length)extra+=emptyMsg('No own posts/quotes in this period.');
+  else{const heat=heatSvg(own,a=>{const e=med(a.map(p=>p.er));return e!=null?e:med(a.map(p=>p.impressions));});
+    extra+=heat.html;const top=topSlots(heat.stats,3);
+    extra+=top.length?'<ul class="toplist">'+top.map(t=>`<li><b>${esc(t.label)}</b> — n=${fN(t.n)}, median impr. ${f1(t.imp)}, median ER ${fP(t.er)}</li>`).join('')+'</ul>':'<div class="note">No time slot with n ≥ '+MINN+' yet.</div>';
+    if(own.every(p=>p.hour==null))extra+='<div class="empty">Heatmap not available: no timestamps in the data. Supply <code>created_at</code> with a time, or a Post id whose snowflake matches the CSV date (README).</div>';}
+
+  extra+='<h3>Best time to reply</h3>';
+  if(!replies.length)extra+=emptyMsg('No replies to others in this period.');
+  else{const heat=heatSvg(replies,a=>med(a.map(p=>p.impressions)));
+    extra+=heat.html;const top=topSlots(heat.stats,3);
+    extra+=top.length?'<ul class="toplist">'+top.map(t=>`<li><b>${esc(t.label)}</b> — n=${fN(t.n)}, median impr. ${f1(t.imp)}, median profile visits ${f1(t.vis)}, median new followers ${f1(t.fol)}</li>`).join('')+'</ul>':'<div class="note">No time slot with n ≥ '+MINN+' yet.</div>';}
+
+  extra+='<h3>Reply speed</h3>';
+  const sped=replies.filter(p=>p.reply_speed);
+  if(!replies.length)extra+=emptyMsg('No replies.');
+  else if(!sped.length)extra+='<div class="empty">not available in the current data</div>';
+  else{const rows=grpRows(sped,p=>p.reply_speed).map(r=>Object.assign(r,{label:SPEED_NL[r.k]||r.k}));
+    const order=['15m','1h','4h','later'];rows.sort((a,b)=>order.indexOf(a.k)-order.indexOf(b.k));
+    extra+=miniBars(rows,'medImp')+table('ispeed',insightCols('Speed'),rows,null);}
+
+  function block(title,note,rows,tid){extra+=`<h3>${title}</h3>`;if(!rows.length){extra+=emptyMsg('No groups.');return;}extra+=miniBars(rows,'medImp')+table(tid,insightCols('Group'),rows,null);}
+  block('Type','post / reply / quote / repost / thread (self-reply chain).',
+    grpRows(P,p=>p.kind||p.type).map(r=>Object.assign(r,{label:KIND_NL[r.k]||r.k})),'ikind');
+  block('Media','Explicit <code>media</code> field; otherwise only a clear external URL → “link”. Rest: unknown.',
+    mediaRows,'imedia');
+  block('Length','Weighted characters (each URL counts as 23, like X). Short &lt; 80, medium 80–200, long 201–280, long-form &gt; 280.',
+    grpRows(cmp,p=>p.length_bucket).map(r=>Object.assign(r,{label:LEN_NL[r.k]||r.k})),'ilen');
+
+  extra+='<h3>Text features</h3>';
+  const featBlocks=[
+    ['Question mark',p=>p.feat_question? 'yes':'no',v=>v==='yes'?'contains “?”':'no “?”','iq'],
+    ['Link in text',p=>p.feat_link?'yes':'no',v=>v==='yes'?'contains a link':'no link','ilink'],
+    ['Hashtags',p=>p.feat_hashtags,v=>HASH_NL[v]||v,'ihash'],
+    ['@mentions',p=>p.feat_mention?'yes':'no',v=>v==='yes'?'contains @mention':'no @mention','iment'],
+    ['Emoji',p=>p.feat_emoji?'yes':'no',v=>v==='yes'?'contains emoji':'no emoji','iemo'],
+    ['Starts as list/number',p=>p.feat_list_start?'yes':'no',v=>v==='yes'?'starts with a number/list':'otherwise','ilist'],
+    ['Line breaks',p=>p.feat_lines,v=>LINE_NL[v]||v,'ilines']
+  ];
+  for(const [title,kf,lf,tid] of featBlocks){const rows=grpRows(cmp,kf).map(r=>Object.assign(r,{label:lf(r.k)}));extra+=`<h3 style="text-transform:none;letter-spacing:0;font-size:13px;color:var(--txt)">${title}</h3>`+miniBars(rows,'medImp')+table(tid,insightCols('Group'),rows,null);}
+  const langRows=grpRows(cmp.filter(p=>p.lang==='nl'||p.lang==='en'),p=>p.lang).map(r=>Object.assign(r,{label:r.k==='nl'?'Dutch':'English'}));
+  if(langRows.length){extra+='<h3 style="text-transform:none;letter-spacing:0;font-size:13px;color:var(--txt)">Language (simple NL/EN)</h3>'+miniBars(langRows,'medImp')+table('ilang',insightCols('Group'),langRows,null);}
+  extra+='<h3>Top 5 recipes</h3>';
+  const recG={};
+  for(const p of own){if(!p.media_kind||p.media_kind==='unknown'||!p.length_bucket||!p.daypart)continue;const k=p.media_kind+'|'+p.length_bucket+'|'+p.daypart;(recG[k]=recG[k]||[]).push(p);}
+  const recs=Object.keys(recG).map(k=>{const a=recG[k],[mk,lb,dp]=k.split('|');return{k,label:(MK_NL[mk]||mk)+' + '+(LEN_NL[lb]||lb).split(' ')[0]+' + '+(DP_NL[dp]||dp).split(' ')[0],n:a.length,low:a.length<MINN,_cls:a.length<MINN?'lowdata':'',medImp:med(a.map(p=>p.impressions)),medEr:med(a.map(p=>p.er)),medLikes:med(a.map(p=>p.likes)),medReplies:med(a.map(p=>p.replies)),medReposts:med(a.map(p=>p.reposts)),medBm:med(a.map(p=>p.bookmarks)),vis1k:med(a.map(p=>p.visits_per_1k)),fol1k:med(a.map(p=>p.follows_per_1k))};}).filter(r=>r.n>=MINN).sort((a,b)=>(b.medImp||0)-(a.medImp||0)).slice(0,5);
+  if(!recs.length)extra+=emptyMsg('No recipe with n ≥ '+MINN+' yet (media + length + daypart).');
+  else extra+=miniBars(recs,'medImp')+table('irec',insightCols('Recipe'),recs,null);
+  h+=fold('Analysis',extra);
+  return h;}
+
+/* ---------- 8. Sources & log ---------- */
+function sec7(){const L=D.log||[];const w=L.filter(x=>x.level!=='info').length;
+  const src = IS_PUBLIC
+    ? `<div class="note">${STR.generated}: ${esc(META.generated_at)}</div>`
+    : `<div class="note">${STR.generated}: ${esc(META.generated_at)} · data dir: <code>${esc(META.data_dir||'')}</code>${META.followers_dir?` · extra snapshots: <code>${esc(META.followers_dir)}</code>`:''}</div>`;
+  const extra=`${src}
+  <div class="note">Follower snapshots: ${S.length} day(s)${S.length?` (${fD(S[0].date)} – ${fD(S[S.length-1].date)})`:''} · Posts: ${POSTS.length}${firstPostDate?` (from ${fD(firstPostDate)})`:''} · Notices: ${w}</div>
+  <div class="log">${L.map(x=>`<div class="${x.level!=='info'?'w':''}">${x.level!=='info'?'⚠ ':''}${esc(x.msg)}</div>`).join('')}</div>`;
+  return `<h2>${STR.sources}</h2>`+fold(`Build log (${L.length}, ${w} ⚠)`,extra);}
+
+/* ---------- BI canvas (main view; legacy sec* stay for source checks) ---------- */
+function mediaKindOf(p){const k=p&&p.media_kind;if(!k||k==='unknown')return 'text';return k;}
+function mediaLabel(k){return k==='text'?'Text only':(MK_NL[k]||k);}
+function tipIcon(t){return t?`<span class="info" title="${esc(t)}">i</span>`:'';}
+function ownerInitial(){const s=String(DISPLAY||ACC||'?').replace(/^@/,'').trim();return (s.charAt(0)||'?').toUpperCase();}
+function avatarImgFallback(el){const box=el&&el.parentElement;if(!box)return;if(el){el.onerror=null;if(el.parentElement)el.remove();}box.textContent=ownerInitial();}
+window.avatarImgFallback=avatarImgFallback;
+function bindAvatarFallbacks(){document.querySelectorAll('#dash-av img, .pcard-av img').forEach(img=>{if(!img||img.dataset.avBound)return;img.dataset.avBound='1';img.addEventListener('error',function(){avatarImgFallback(img);});});}
+function ownerAvatarHtml(cls){const src=META&&META.avatar;if(src)return `<span class="${cls}" aria-hidden="true"><img src="${esc(src)}" alt="" width="40" height="40" onerror="avatarImgFallback(this)"></span>`;return `<span class="${cls}" aria-hidden="true">${esc(ownerInitial())}</span>`;}
+function canvasKpis(){
+  const kr=kpiCompleteRange(state.start,state.end);
+  const hasDays=!!(kr.days&&kr.days.length);
+  const curP=hasDays?postsIn(kr.start,kr.end):[];const curE=curP.filter(ENGP);const curOwn=curP.filter(p=>p.type==='post'||p.type==='quote');
+  const pr=prevRange();const pkr=kpiCompleteRange(pr.start,pr.end);
+  const prevHas=!!(pkr.days&&pkr.days.length);
+  const prevP=prevHas?postsIn(pkr.start,pkr.end):[];const prevE=prevP.filter(ENGP);const prevOwn=prevP.filter(p=>p.type==='post'||p.type==='quote');
+  const folNow=latestFollowers(state.end);
+  const folPrev=latestFollowers(pr.end);
+  const impNow=hasDays&&curE.length&&has(curE,'impressions')?sum(curE,'impressions'):null;
+  const impPrev=prevHas&&prevE.length&&has(prevE,'impressions')?sum(prevE,'impressions'):null;
+  const erNow=hasDays?erOf(curE):null,erPrev=prevHas?erOf(prevE):null;
+  const repNow=hasDays&&curOwn.length&&has(curOwn,'replies')?sum(curOwn,'replies'):null;
+  const repPrev=prevHas&&prevOwn.length&&has(prevOwn,'replies')?sum(prevOwn,'replies'):null;
+  const visNow=hasDays&&curE.length&&has(curE,'profile_visits')?sum(curE,'profile_visits'):null;
+  const visPrev=prevHas&&prevE.length&&has(prevE,'profile_visits')?sum(prevE,'profile_visits'):null;
+  const empty={t:'',c:'',tone:''};
+  const df=(folNow!=null)?deltaPair(folNow,folPrev):empty;const di=hasDays?deltaPair(impNow,impPrev):empty;const de=hasDays?deltaPair(erNow,erPrev,'er'):empty;
+  const dr=hasDays?deltaPair(repNow,repPrev):empty;const dp=hasDays?deltaPair(curP.length,prevP.length):empty;const dv=hasDays?deltaPair(visNow,visPrev):empty;
+  const days=chartDays();
+  const done=completeDays(days);
+  const cons=done.length?consistencyScore(done):null;
+  const streak=currentStreak(streakDays());
+  const prevDays=pkr.days||[];
+  const consPrev=(prevFullyCovered()&&prevDays.length)?consistencyScore(prevDays):null;
+  const dc=(cons!=null)?deltaPair(cons,consPrev):empty;
+  const streakT=streak>0?(streak+'-day streak'):'No streak';
+  const sparkDays=dayList(state.start,state.end);
+  const sparkVal=(d,fn)=>isIncompleteDay(d)?null:fn(d);
+  const sparkFol=sparkDays.map(d=>{const s=snapOn(d);return s&&s.followers_count!=null?s.followers_count:null;});
+  const sparkImp=sparkDays.map(d=>sparkVal(d,x=>{const a=postsOn(x).filter(ENGP);return a.length&&has(a,'impressions')?sum(a,'impressions'):null;}));
+  const sparkEr=sparkDays.map(d=>sparkVal(d,x=>erOf(postsOn(x).filter(ENGP))));
+  const sparkRep=sparkDays.map(d=>sparkVal(d,x=>{const a=postsOn(x).filter(p=>p.type==='post'||p.type==='quote');return a.length&&has(a,'replies')?sum(a,'replies'):null;}));
+  const sparkPosts=sparkDays.map(d=>sparkVal(d,x=>postsOn(x).length));
+  const sparkVis=sparkDays.map(d=>sparkVal(d,x=>{const a=postsOn(x).filter(ENGP);return a.length&&has(a,'profile_visits')?sum(a,'profile_visits'):null;}));
+  const sparkCons=days.map(d=>isIncompleteDay(d)?null:dayScore(d)*100);
+  const dash='—';
+  return `<div class="kpis" id="kpis">${kpi('Followers',folNow!=null?fN(folNow):dash,df.t,df.c,'',sparkFol,df.tone)}${kpi('Impressions',hasDays&&impNow!=null?fN(impNow):dash,di.t,di.c,'',sparkImp,di.tone)}${kpi('Engagement rate',hasDays?fP(erNow):dash,de.t,de.c,'',sparkEr,de.tone)}${kpi('Replies received',hasDays&&repNow!=null?fN(repNow):dash,dr.t,dr.c,'',sparkRep,dr.tone)}${kpi('Posts',hasDays?fN(curP.length):dash,dp.t,dp.c,'',sparkPosts,dp.tone)}${kpi('Profile visits',hasDays&&visNow!=null?fN(visNow):dash,dv.t,dv.c,'',sparkVis,dv.tone)}</div><div class="cons-panel" id="cons-panel">${kpi('Consistency',cons!=null?cons.toLocaleString('en-US',{maximumFractionDigits:0}):dash,dc.t,dc.c,consistencyFormulaTip(),sparkCons,cons!=null?trafficLightScore(cons):'',streakT)}<div class="cons-visual" id="cons-visual">${consistencyCalendar()}${weekdaySummary()}</div></div>`+tlLegend();
+}
+function tlLegend(){
+  return `<div class="tl-legend" id="tl-legend"><span><i style="background:var(--tl-green)"></i>green ≥ 75 / +10%</span><span><i style="background:var(--tl-yellow)"></i>yellow 50–74 / −10% to +10%</span><span><i style="background:var(--tl-orange)"></i>orange 25–49 / −25% to −10%</span><span><i style="background:var(--tl-red)"></i>red &lt; 25 / &lt; −25%</span></div>`;
+}
+function consistencyCalendar(days){
+  days=days||calendarDays();
+  if(!days.length)return '';
+  const pad=wdOf(days[0]);
+  const cells=[];
+  for(let i=0;i<pad;i++)cells.push(null);
+  days.forEach(d=>cells.push(d));
+  while(cells.length%7)cells.push(null);
+  const labels=WD.map(w=>`<span>${w}</span>`).join('');
+  const weeks=cells.length/7;
+  const months=[];
+  let lastLab=-99;
+  for(let w=0;w<weeks;w++){
+    let first=null,prev=null;
+    for(let r=0;r<7;r++){if(!first&&cells[w*7+r])first=cells[w*7+r];if(w>0&&!prev&&cells[(w-1)*7+r])prev=cells[(w-1)*7+r];}
+    const changed=!!(first&&(!prev||first.slice(0,7)!==prev.slice(0,7)));
+    if(changed){
+      if(lastLab>=0&&w-lastLab<2) months[lastLab]='<span class="cal-mon"></span>';
+      lastLab=w;
+      months.push(`<span class="cal-mon">${MONS[+first.slice(5,7)-1]}</span>`);
+    }else months.push('<span class="cal-mon"></span>');
+  }
+  const boxes=cells.map(d=>{
+    if(!d)return '<span class="cal-cell"></span>';
+    const inRange=inR(d);
+    const rangeCls=inRange?' is-in-range':' is-out';
+    if(d>TODAY||isIncompleteDay(d))return `<span class="cal-cell is-incomplete${rangeCls}" data-date="${esc(d)}" title="${esc(fDs(d)+' · incomplete')}"></span>`;
+    const first=minDataDate();
+    if(first&&d<first)return `<span class="cal-cell${rangeCls}" data-date="${esc(d)}" title="${esc(fDs(d))}"></span>`;
+    const sc=dayScore(d)*100;
+    const tone=trafficLightScore(sc);
+    return `<span class="cal-cell tl-${tone}${rangeCls}" data-date="${esc(d)}" title="${esc(fDs(d)+' · '+sc.toLocaleString('en-US',{maximumFractionDigits:0}))}"></span>`;
+  }).join('');
+  return `<div class="cal-wrap" id="consistency-cal" style="--cal-n:${weeks}"><div class="cal-head"><h3>Consistency calendar</h3></div><div class="cal-grid-wrap"><div class="cal-months" aria-hidden="true">${months.join('')}</div><div class="cal-wd" aria-hidden="true">${labels}</div><div class="cal-grid" role="img" aria-label="Consistency calendar">${boxes}</div></div></div>`;
+}
+function dayScoreStrip(days){
+  days=days||[];
+  if(!days.length)return '';
+  const cells=days.map(d=>{
+    if(isIncompleteDay(d))return `<span class="dscore-cell is-incomplete" title="${esc(fDs(d)+' · incomplete')}"></span>`;
+    const sc=dayScore(d)*100;
+    const tone=trafficLightScore(sc);
+    return `<span class="dscore-cell tl-${tone}" title="${esc(fDs(d)+' · day score '+sc.toLocaleString('en-US',{maximumFractionDigits:0}))}"></span>`;
+  }).join('');
+  return `<div class="dscore"><div class="dscore-row">${cells}</div><div class="dscore-leg">Day score <span><i style="background:var(--tl-green)"></i>green</span><span><i style="background:var(--tl-yellow)"></i>yellow</span><span><i style="background:var(--tl-orange)"></i>orange</span><span><i style="background:var(--tl-red)"></i>red</span></div></div>`;
+}
+function weekdaySummary(days){
+  days=days||calendarDays();
+  const first=minDataDate();
+  const done=completeDays(days).filter(d=>!first||d>=first);
+  const buckets=WD.map((_,i)=>({n:0,sum:0}));
+  done.forEach(d=>{const w=wdOf(d);buckets[w].n++;buckets[w].sum+=dayScore(d)*100;});
+  const rows=buckets.map((b,i)=>{
+    const avg=b.n?b.sum/b.n:null;
+    const tone=avg==null?'':' tl-'+trafficLightScore(avg);
+    const pct=avg==null?0:Math.max(4,Math.min(100,Math.round(avg)));
+    return `<div class="wd-row"><span class="wd-lab">${WD[i]}</span><span class="wd-bar"><i class="${tone}" style="width:${pct}%"></i></span><span class="wd-n">${avg==null?'—':Math.round(avg)}</span></div>`;
+  }).join('');
+  return `<div class="wd-sum" id="weekday-sum"><h3>By weekday</h3>${rows}</div>`;
+}
+function canvasFollowers(){
+  let h=`<h3>Followers per day</h3>`;
+  if(!S.length)return h+EMPTY;
+  const days=followerDays();
+  const actual=Object.fromEntries(S.filter(s=>s.followers_count!=null).map(s=>[s.date,s.followers_count]));
+  const series=[{name:'Actual',color:'#3b82f6',vals:actual,connect:true,z:10,width:2.8}];
+  const fullFol=Object.fromEntries(S.filter(s=>s.followers_count!=null).map(s=>[s.date,s.followers_count]));
+  const prevFol=compareOn()?alignPrev(days,fullFol):null;
+  const G=META.goal||{};const gf=G.followers,gd=G.date;const set=gf!=null&&!!gd;
+  const ok=snapshotPaceOk();
+  const p7=ok?paceOverDays(7):null,p30=ok?paceOverDays(30):null;
+  const fb=(!ok)?analyticsPace():null;
+  const last=snapsWithFc().length?snapsWithFc()[snapsWithFc().length-1]:null;
+  const first=snapsWithFc().length?snapsWithFc()[0]:null;
+  const rate7=p7?p7.perDay:(fb?fb.perDay:null);
+  const rate30=p30?p30.perDay:(fb?fb.perDay:null);
+  const nActual=days.filter(d=>actual[d]!=null).length||days.length;
+  if(last&&(rate7!=null||rate30!=null)){
+    const cur=last.followers_count;
+    const horizon=forecastHorizon(nActual);
+    let xEnd=horizon>0?addDays(last.date,horizon):last.date;
+    if(set&&gd&&gd>last.date&&gd<=addDays(last.date,30)) xEnd=xEnd>gd?xEnd:gd;
+    if(state.end&&xEnd<state.end)xEnd=state.end;
+    const xStart=days[0]||last.date;const xDays=dayList(xStart,xEnd);
+    const two=rate7!=null&&rate30!=null&&!ratesClose(rate7,rate30);
+    const f7=rate7!=null?fillRate(xDays,last.date,cur,rate7):null;
+    const f30=rate30!=null?fillRate(xDays,last.date,cur,rate30):null;
+    const primary=f7||f30;
+    const snaps=snapsWithFc();
+    if(primary&&snaps.length>=3){
+      const inView=snaps.filter(s=>s.date>=(days[0]||'')&&s.date<=(state.end||s.date));
+      const stdDaily=stdev(dailyChanges(inView.length>=3?inView:snaps));
+      const fbnd=forecastBand(primary,xDays,last.date,cur,stdDaily);
+      if(fbnd.width>0) series.push({name:'Forecast band',color:'#3b82f6',vals:fbnd.hi,band:true,bandLo:fbnd.lo});
+    }
+    if(two&&f30) series.push({name:'Forecast 30d',color:'#f59e0b',dash:true,vals:f30,z:4,width:1.8});
+    if(f7) series.push({name:'Forecast 7d',color:'#22c55e',dash:true,dotted:true,vals:f7,z:6,width:2.2});
+    else if(f30) series.push({name:'Forecast 30d',color:'#f59e0b',dash:true,vals:f30,z:4,width:1.8});
+    if(set&&first)series.push({name:'Goal',color:'#8b98a5',dash:true,vals:fillLerp(xDays,first.date,first.followers_count,gd,gf),z:5,width:1.6});
+    if(prevFol&&prevPointCount(prevFol)>=2)series.push({name:'Previous',color:'#8b98a5',vals:prevFol,dash:true,fade:true,z:3,width:1.5,prev:true});
+    const ch=lineChart(xDays,series,{h:220,vfmt:v=>fN(Math.round(v))});
+    return h+(ch||EMPTY);
+  }
+  if(prevFol&&prevPointCount(prevFol)>=2)series.push({name:'Previous',color:'#8b98a5',vals:prevFol,dash:true,fade:true,z:3,width:1.5,prev:true});
+  const ch=lineChart(days,series,{h:220,vfmt:v=>fN(Math.round(v))});
+  return h+(ch||EMPTY);
+}
+function canvasImpressions(){
+  let h=`<h3>Impressions per day</h3>`;
+  if(!POSTS.length)return h+EMPTY;
+  const P=POSTS.filter(p=>inR(p.local_date)&&p.type!=='repost');
+  const days=chartDays();
+  const vals={};P.forEach(p=>{if(p.impressions!=null)vals[p.local_date]=(vals[p.local_date]||0)+p.impressions;});
+  const erv={};days.forEach(d=>{const e=erOf(P.filter(p=>p.local_date===d));if(e!=null)erv[d]=e;});
+  const o={};
+  if(compareOn()){
+    const all=POSTS.filter(p=>p.type!=='repost');
+    const fullImp={},fullEr={};
+    const span=dayList(prevRange().start,state.end);
+    span.forEach(d=>{const a=all.filter(p=>p.local_date===d);if(a.length&&has(a,'impressions'))fullImp[d]=sum(a,'impressions');const e=erOf(a);if(e!=null)fullEr[d]=e;});
+    o.prevImp=alignPrev(days,fullImp);
+    o.prevEr=alignPrev(days,fullEr);
+  }
+  return h+comboChart(days,vals,erv,o);
+}
+function canvasPosts(){
+  let h=`<h3>Posts per day</h3>`;
+  if(!POSTS.length)return h+EMPTY;
+  const days=chartDays();const P=POSTS.filter(p=>inR(p.local_date));
+  const ser=['post','reply','repost','quote'].map(t=>({name:TYPE_PL[t],color:TCOL[t],vals:{}}));
+  P.forEach(p=>{const s=ser[['post','reply','repost','quote'].indexOf(p.type)];if(s)s.vals[p.local_date]=(s.vals[p.local_date]||0)+1;});
+  const opt={legend:1};
+  if(compareOn()){
+    const full={};POSTS.forEach(p=>{full[p.local_date]=(full[p.local_date]||0)+1;});
+    opt.prevLine={name:'Previous',vals:alignPrev(days,full),color:'#8b98a5'};
+  }
+  return h+barChart(days,ser,opt)+dayScoreStrip(days);
+}
+function canvasRepliesSent(){
+  let h=`<h3>Replies sent</h3>`;
+  if(!POSTS.length)return h+EMPTY;
+  const R=POSTS.filter(p=>inR(p.local_date)&&p.type==='reply');
+  const RO=R.filter(p=>!p.self_reply),RS=R.filter(p=>p.self_reply);
+  const days=chartDays();const v1={},v2={};
+  RO.forEach(p=>v1[p.local_date]=(v1[p.local_date]||0)+1);
+  RS.forEach(p=>v2[p.local_date]=(v2[p.local_date]||0)+1);
+  if(!R.length)return h+EMPTY;
+  const opt={};
+  if(compareOn()){
+    const full={};POSTS.filter(p=>p.type==='reply'&&!p.self_reply).forEach(p=>{full[p.local_date]=(full[p.local_date]||0)+1;});
+    opt.prevLine={name:'Previous',vals:alignPrev(days,full),color:'#8b98a5'};
+  }
+  return h+barChart(days,[{name:'To others',color:'#22c55e',vals:v1},{name:'To own posts',color:'#8b98a5',vals:v2}],opt)+dayScoreStrip(days);
+}
+function canvasRepliesRecv(){
+  let h=`<h3>Replies received</h3>`;
+  if(!POSTS.length)return h+EMPTY;
+  const OWN=POSTS.filter(p=>inR(p.local_date)&&(p.type==='post'||p.type==='quote'));
+  const days=chartDays();const rv={};
+  OWN.forEach(p=>{if(p.replies!=null)rv[p.local_date]=(rv[p.local_date]||0)+p.replies;});
+  const opt={};
+  if(compareOn()){
+    const full={};POSTS.filter(p=>p.type==='post'||p.type==='quote').forEach(p=>{if(p.replies!=null)full[p.local_date]=(full[p.local_date]||0)+p.replies;});
+    opt.prevLine={name:'Previous',vals:alignPrev(days,full),color:'#8b98a5'};
+  }
+  return h+barChart(days,[{name:'Replies received',color:'#a78bfa',vals:rv}],opt);
+}
+function canvasHeatPost(){
+  const own=POSTS.filter(p=>inR(p.local_date)&&(p.type==='post'||p.type==='quote'));
+  return heatCard('Best time to post',own,a=>med(a.map(p=>p.impressions)));
+}
+function canvasHeatReply(){
+  const replies=POSTS.filter(p=>inR(p.local_date)&&p.type==='reply'&&!p.self_reply);
+  return heatCard('Best time to reply',replies,a=>med(a.map(p=>p.impressions)));
+}
+function canvasBest(){
+  let h=`<h3>What works best</h3>`;
+  if(!POSTS.length)return h+EMPTY;
+  const P=POSTS.filter(p=>inR(p.local_date));
+  if(!P.length)return h+EMPTY;
+  const cmp=P.filter(p=>p.type!=='repost');
+  const replies=P.filter(p=>p.type==='reply'&&!p.self_reply);
+  function rows(items,keyFn,labFn){
+    return grpRows(items,keyFn).map(r=>Object.assign(r,{label:labFn(r.k)}));
+  }
+  const blocks=[
+    ['Media',rows(cmp,p=>mediaKindOf(p),mediaLabel)],
+    ['Length',rows(cmp,p=>p.length_bucket==='long_form'?'long':p.length_bucket,k=>({short:'Short',medium:'Medium',long:'Long'}[k]||k))],
+    ['Type',rows(P,p=>p.kind||p.type,k=>KIND_NL[k]||k)]
+  ];
+  const sped=replies.filter(p=>p.reply_speed);
+  if(sped.length){
+    const r=rows(sped,p=>p.reply_speed,k=>SPEED_NL[k]||k);
+    const order=['15m','1h','4h','later'];r.sort((a,b)=>order.indexOf(a.k)-order.indexOf(b.k));
+    blocks.push(['Reply speed',r]);
+  }
+  h+='<div class="ww">';
+  for(const [title,rr] of blocks){
+    h+=`<div><h3>${esc(title)} · median impressions</h3>${miniBars(rr,'medImp')||EMPTY}</div>`;
+  }
+  return h+'</div>';
+}
+function postCard(p,score){
+  const tone=trafficLightScore(score);
+  const open=!!(state.cardOpen&&state.cardOpen[p.id]);
+  const name=DISPLAY||ACC||'Account';
+  const handle=ACC?'@'+ACC:'';
+  const when=fDs(p.local_date)+(p.local_time?' '+p.local_time:'');
+  const reply=replyLine(p);
+  const text=p.text||'(no text)';
+  const long=String(text).length>160||(String(text).match(/\n/g)||[]).length>=5;
+  const href=IS_DEMO?'#':postPermalink(p);
+  const hitAttrs=IS_DEMO?'href="#"':'href="'+esc(href)+'" target="_blank" rel="noopener"';
+  const more=long?`<button type="button" class="pcard-more" data-id="${esc(p.id)}">${open?'Show less':'Show more'}</button>`:'';
+  return `<article class="pcard tl-${tone}${open?' is-open':''}" data-id="${esc(p.id)}" data-kind="${esc(messageKind(p))}" data-score="${esc(String(Math.round(score)))}">
+    <a class="pcard-hit" ${hitAttrs}>
+      <div class="pcard-hd">
+        ${ownerAvatarHtml('pcard-av')}
+        <div class="pcard-who"><div class="pcard-name">${esc(name)}</div><div class="pcard-handle top-meta">${esc((handle?handle+' · ':'')+when)}</div></div>
+        <span class="pcard-badge" title="${esc('Value '+Math.round(score)+' · '+tone)}">${Math.round(score)}</span>
+      </div>
+      ${reply?`<div class="pcard-reply">${esc(reply)}</div>`:''}
+      <p class="pcard-text">${esc(text)}</p>
+      <div class="pcard-metrics"><span>${fN(p.impressions)} ${pluralize(p.impressions,'view')}</span><span>${fN(p.likes)} ${pluralize(p.likes,'like')}</span><span>${fN(p.replies)} ${pluralize(p.replies,'reply')}</span><span>${fN(p.reposts)} ${pluralize(p.reposts,'repost')}</span><span>${fN(p.bookmarks)} ${pluralize(p.bookmarks,'bookmark')}</span></div>
+    </a>${more}
+  </article>`;
+}
+function canvasTops(){
+  if(!POSTS.length)return `<h3>Posts</h3>`+EMPTY;
+  const tab=state.cardTab||'top';
+  const scores=scoredPosts();
+  const all=POSTS.filter(p=>inR(p.local_date)&&p.type!=='repost');
+  const byScore=(a,b)=>(scores.get(b.id)||0)-(scores.get(a.id)||0)||String(b.local_date||'').localeCompare(String(a.local_date||''));
+  const tabs=['top','latest','posts','replies'].map(k=>{
+    const lab={top:'Top',latest:'Latest',posts:'Posts',replies:'Replies'}[k];
+    return `<button type="button" data-card-tab="${k}" class="${tab===k?'on':''}" aria-pressed="${tab===k?'true':'false'}">${lab}</button>`;
+  }).join('');
+  const tabBar=`<h3>Posts ${tipIcon(valueFormulaTip())}</h3><div class="post-tools"><div class="ptabs" role="tablist">${tabs}</div></div>`;
+  if(tab==='top'){
+    const posts=all.filter(p=>p.type==='post'||p.type==='quote').slice().sort(byScore);
+    const replies=all.filter(p=>p.type==='reply').slice().sort(byScore);
+    const half=Math.max(1,Math.ceil((state.cardLimit||6)/2));
+    const more=(posts.length>half||replies.length>half)?`<button type="button" class="card-more" id="card-more">Load more</button>`:'';
+    const left=posts.slice(0,half).map(p=>postCard(p,scores.get(p.id)||0)).join('')||EMPTY;
+    const right=replies.slice(0,half).map(p=>postCard(p,scores.get(p.id)||0)).join('')||EMPTY;
+    const n=Math.max(posts.slice(0,half).length,replies.slice(0,half).length,1);
+    return `${tabBar}<div class="post-split" id="post-split" style="--split-n:${n}"><div class="post-col" data-split="posts"><h4 class="split-h">Top posts</h4><div class="post-grid">${left}</div></div><div class="post-col" data-split="replies"><h4 class="split-h">Top replies</h4><div class="post-grid">${right}</div></div></div>${more}`;
+  }
+  let rows=all;
+  if(tab==='posts') rows=rows.filter(p=>p.type==='post'||p.type==='quote');
+  if(tab==='replies') rows=rows.filter(p=>p.type==='reply');
+  if(tab==='latest') rows=rows.slice().sort((a,b)=>String(b.created_at||b.local_date||'').localeCompare(String(a.created_at||a.local_date||'')));
+  else rows=rows.slice().sort(byScore);
+  if(!rows.length)return tabBar+EMPTY;
+  const limit=state.cardLimit||6;
+  const slice=rows.slice(0,limit);
+  const more=rows.length>limit?`<button type="button" class="card-more" id="card-more">Load more</button>`:'';
+  return `${tabBar}<div class="post-grid" id="post-grid">${slice.map(p=>postCard(p,scores.get(p.id)||0)).join('')}</div>${more}`;
+}
+
+function syncPeriodButtons(){
+  const det=document.querySelector('#filterbar details.bar-custom');
+  const customOn=state.preset==='custom'||(det&&det.open);
+  document.querySelectorAll('#filterbar button[data-p]').forEach(b=>{const on=!customOn&&b.dataset.p===state.preset;b.classList.toggle('on',on);b.setAttribute('aria-pressed',on?'true':'false');});
+  if(det) det.classList.toggle('on',state.preset==='custom');
+}
+function render(){
+  syncPeriodButtons();
+  document.getElementById('fs').value=state.start;document.getElementById('fe').value=state.end;
+  const sr=shownRangeLabel();
+  document.getElementById('perlabel').textContent=`${sr.text} (${sr.n} ${pluralize(sr.n,'day')})`;
+  const shown=document.getElementById('shown-range');if(shown)shown.textContent=sr.text;
+  const b90=document.querySelector('#filterbar button[data-p="90"]');if(b90)b90.title=state.preset==='90'?sr.text:'90 days';
+  const secs=[['s1',canvasKpis],['s2',canvasFollowers],['s4',canvasImpressions],['s3',canvasPosts],['s5',canvasRepliesSent],['sr',canvasRepliesRecv],['hp',canvasHeatPost],['hr',canvasHeatReply],['s8',canvasBest],['s6',canvasTops]];
+  secs.forEach(([id,f])=>{const el=document.getElementById(id);if(!el)return;try{el.innerHTML=f();}catch(err){el.innerHTML=`<h3>${id}</h3><div class="empty">Render error</div>`;console.error(err);}});
+  const s7=document.getElementById('s7');if(s7)s7.innerHTML='';
+  const tq=document.getElementById('top-q');if(tq){tq.oninput=()=>{state.topQ=tq.value;state.topPage=0;render();};}
+  const tp=document.getElementById('top-prev');if(tp)tp.onclick=()=>{state.topPage=Math.max(0,(state.topPage||0)-1);render();};
+  const tn=document.getElementById('top-next');if(tn)tn.onclick=()=>{state.topPage=(state.topPage||0)+1;render();};
+  document.querySelectorAll('[data-card-tab]').forEach(b=>{b.onclick=()=>{state.cardTab=b.getAttribute('data-card-tab');state.cardLimit=6;render();};});
+  const cm=document.getElementById('card-more');if(cm)cm.onclick=()=>{state.cardLimit=(state.cardLimit||6)+6;render();};
+  document.querySelectorAll('.pcard-more').forEach(b=>{b.onclick=e=>{e.preventDefault();e.stopPropagation();const id=b.getAttribute('data-id');state.cardOpen=state.cardOpen||{};state.cardOpen[id]=!state.cardOpen[id];const card=b.closest('.pcard');if(card)card.classList.toggle('is-open',state.cardOpen[id]);b.textContent=state.cardOpen[id]?'Show less':'Show more';};});
+  if(IS_DEMO){document.querySelectorAll('a.pcard-hit[href="#"]').forEach(a=>{a.addEventListener('click',e=>e.preventDefault());});}
+  const cmp=document.getElementById('cmp-prev');if(cmp){syncCompareUi();cmp.onchange=()=>{if(cmp.disabled)return;state.compare=cmp.checked;closeMore();render();};}
+  const th=document.getElementById('theme-toggle');if(th){th.textContent=document.documentElement.getAttribute('data-theme')==='light'?'Dark':'Light';th.onclick=()=>{const cur=document.documentElement.getAttribute('data-theme')==='light'?'light':'dark';const next=cur==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',next);try{localStorage.setItem('xdash-theme',next);}catch(e){}closeMore();render();};}
+  const more=document.getElementById('more-btn');const tools=document.getElementById('bar-tools');
+  if(more&&tools){more.onclick=e=>{e.stopPropagation();const open=tools.classList.toggle('open');more.setAttribute('aria-expanded',open?'true':'false');};}
+  bindAvatarFallbacks();
+  mountCharts();
+  fitAxisFonts();
+}
+function closeMore(){const more=document.getElementById('more-btn');const tools=document.getElementById('bar-tools');if(tools)tools.classList.remove('open');if(more)more.setAttribute('aria-expanded','false');}
+function syncCompareUi(){const cmp=document.getElementById('cmp-prev');if(!cmp)return;const ok=prevFullyCovered();cmp.disabled=!ok;const tip=ok?'':'Not enough history';cmp.title=tip;const lab=cmp.closest('label');if(lab)lab.title=tip;cmp.checked=!!(state.compare&&ok);const hint=document.getElementById('cmp-hint');if(hint){hint.textContent='Not enough history';hint.classList.toggle('is-on',!ok);if(!ok)hint.removeAttribute('hidden');else hint.setAttribute('hidden','');}}
+function setPreset(p){closeMore();const det=document.querySelector('#filterbar details.bar-custom');if(det)det.open=false;state.preset=p;state.end=TODAY;state.start=p==='all'?minDataDate():addDays(TODAY,-(+p-1));render();}
+document.querySelectorAll('#filterbar button[data-p]').forEach(b=>b.onclick=()=>setPreset(b.dataset.p));
+document.getElementById('fapply').onclick=()=>{closeMore();const a=document.getElementById('fs').value,b=document.getElementById('fe').value;if(!a||!b||a>b){alert('Choose a valid start and end date (start ≤ end).');return;}state.preset='custom';state.start=a;state.end=b;render();};
+document.addEventListener('pointerdown',e=>{const more=document.getElementById('more-btn');const tools=document.getElementById('bar-tools');if(!tools||!tools.classList.contains('open'))return;if(tools.contains(e.target)||(more&&more.contains(e.target)))return;closeMore();});
+document.addEventListener('toggle',e=>{const t=e.target;if(!t||t.tagName!=='DETAILS')return;if(t.classList.contains('bar-custom'))syncPeriodButtons();if(t.open)setTimeout(()=>fitAxisFonts(t),0);},true);
+window.addEventListener('resize',()=>fitAxisFonts());
+(function setupChrome(){
+  const title = DISPLAY ? (DISPLAY + (ACC ? ' — @'+ACC : '')) : (ACC ? STR.title+' — @'+ACC : STR.genericTitle);
+  document.title = title;
+  const h = document.getElementById('dash-title');
+  if(h) h.textContent = DISPLAY || STR.genericTitle;
+  const badge = document.getElementById('demo-badge');
+  if(badge) badge.hidden = !IS_DEMO;
+  const strip = document.getElementById('demo-strip');
+  if(strip) strip.hidden = !IS_DEMO;
+  const acct = document.getElementById('acct');
+  if(acct) acct.textContent = ACC ? '@'+ACC : '';
+  const av=document.getElementById('dash-av');
+  if(av){av.hidden=false;av.innerHTML=(META.avatar)?`<img src="${esc(META.avatar)}" alt="" width="40" height="40" onerror="avatarImgFallback(this)">`:esc(ownerInitial());}
+  const gen = document.getElementById('genline');
+  if(gen){ gen.textContent = fD(TODAY); gen.title = `${STR.generated} ${META.generated_at||'?'} · Europe/Amsterdam · offline`; }
+  document.querySelectorAll('nav a[data-nav]').forEach(a=>{const k=a.getAttribute('data-nav'); if(STR[k]) a.textContent=STR[k];});
+  const ft = document.getElementById('dash-footer');
+  if(ft){
+    if(REPO){ ft.hidden=false; ft.innerHTML = `<a href="${esc(REPO)}" rel="noopener">${esc(STR.footer)}</a>`; }
+    else { ft.hidden=true; ft.innerHTML=''; }
+  }
+  bindAvatarFallbacks();
+})();
+try{const t=localStorage.getItem('xdash-theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t);}catch(e){}
+window.addEventListener('resize',()=>resizeCharts());
+window.__xdash={get state(){return state;},get charts(){return EC_INST;},chartDays,followerDays,firstFollowerDate,shownRangeLabel,prevFullyCovered,paceOverDays,forecastHorizon,heatRange,forecastBand,followersOn,bindDateHover,clipPrevLine,stdev,dailyChanges,heatMapped,heatLowColor,heatEmptyColor,heatColors,contrastRatio,hexLum,robustYMax,SCORE,percentileRank,weightedEng,valueScore,dayScore,consistencyScore,currentStreak,trafficLightScore,trafficLightDelta,scoredPosts,postPermalink,lastDataDate,lastCompleteDay,isIncompleteDay,completeDays,pluralize,kpiCompleteRange,streakDays,calendarDays,CAL_WEEKS_MAX,latestFollowers,weekdaySummary,avatarImgFallback,bindAvatarFallbacks,compactN,yCatLabelWidth,metricBarLabel,metricBarShort};
+if(!TODAY){document.querySelector('main').innerHTML='<section>'+EMPTY+'</section>';return;}
+setPreset('30');
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,140 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Dev tools (ruff, pip-audit)
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install -r requirements-dev.txt
+          ruff check .
+          ruff format --check skills tests/test_skills.py tests/test_public_readiness.py
+          pip-audit --disable-pip --no-deps -r requirements-dev.txt
+
+      - name: Unit tests
+        run: bash scripts/check_tmp_hygiene.sh python3 -m unittest discover -s tests -v
+
+      - name: Unit tests in a tree without .git
+        run: |
+          tree="$(mktemp -d)"
+          git archive HEAD | tar -x -C "$tree"
+          test ! -e "$tree/.git"
+          (cd "$tree" && bash scripts/check_tmp_hygiene.sh python3 -m unittest discover -s tests -v)
+
+      - name: Real-data guard
+        run: bash scripts/check_no_real_data.sh
+
+      - name: Secret scan (gitleaks)
+        run: |
+          ver=8.24.3
+          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${ver}/gitleaks_${ver}_linux_x64.tar.gz" \
+            | tar -xz -C /tmp gitleaks
+          /tmp/gitleaks detect --source . --verbose --redact --config .gitleaks.toml
+
+      - name: Nested data/ files stay gitignored
+        run: |
+          git check-ignore -q -- data/followers/snapshot-2026-01-01.json
+          git check-ignore -q -- data/followers/latest.json
+          git check-ignore -q -- data/posts/posts-1.json
+          git check-ignore -q -- data/analytics-csv/x.csv
+          git check-ignore -q -- data/research/reply_targets.json
+          git check-ignore -q -- data/research/README-onderzoek.md
+          git check-ignore -q -- data/config.json
+          git check-ignore -q -- data/target_accounts.json
+          git check-ignore -q -- data/public_allowlist.json
+          git check-ignore -q -- assets/avatar.jpg
+          git check-ignore -q -- assets/avatar.png
+          git check-ignore -q -- .avatar-cache/meta.json
+          git check-ignore -q -- data/.avatar-cache/avatar.png
+          if git check-ignore -q -- data/followers/.gitkeep; then
+            echo "data/followers/.gitkeep must not be ignored" >&2
+            exit 1
+          fi
+          if git check-ignore -q -- data/config.example.json; then
+            echo "data/config.example.json must not be ignored" >&2
+            exit 1
+          fi
+          if git check-ignore -q -- data/public_allowlist.example.json; then
+            echo "data/public_allowlist.example.json must not be ignored" >&2
+            exit 1
+          fi
+          if git check-ignore -q -- .env.example; then
+            echo ".env.example must not be ignored" >&2
+            exit 1
+          fi
+
+      - name: Fixture generator + private and public builds
+        run: |
+          python3 test-fixtures/make_fixtures.py
+          out="$(mktemp -d)"
+          python3 build.py --data test-fixtures/data --mode private --out "$out/index.test.html" --today 2026-09-25
+          python3 build.py --data test-fixtures/data --mode public --out "$out/index.public.html" --today 2026-09-25
+          test -f "$out/index.test.html"
+          test -f "$out/index.public.html"
+          grep -q TESTFIXTURE "$out/index.test.html"
+          grep -q "What works best" "$out/index.test.html"
+          grep -q "Reply ROI by account" "$out/index.test.html"
+          grep -q "From profile visit to follower" "$out/index.test.html"
+          grep -q "Follower goal" "$out/index.test.html"
+          grep -q "Median impressions" "$out/index.test.html"
+          grep -q 'html lang="en"' "$out/index.test.html"
+          grep -q 'html lang="en"' "$out/index.public.html"
+          grep -q "Followers per day" "$out/index.test.html"
+          grep -q "Impressions per day" "$out/index.test.html"
+          grep -q 'name="x-dashboard-mode" content="private"' "$out/index.test.html"
+          grep -q 'name="x-dashboard-mode" content="public"' "$out/index.public.html"
+          grep -q 'og:title' "$out/index.public.html"
+          python3 scripts/check_public_leaks.py "$out/index.public.html" test-fixtures/data
+          python3 build.py --out "$out/index.default.html"
+          grep -q TESTFIXTURE "$out/index.default.html"
+          grep -q 'name="x-dashboard-mode" content="public"' "$out/index.default.html"
+          python3 scripts/check_public_leaks.py "$out/index.default.html" test-fixtures/data
+
+      - name: Empty data build
+        run: |
+          empty="$(mktemp -d)"
+          mkdir -p "$empty/followers" "$empty/posts" "$empty/analytics-csv"
+          python3 build.py --data "$empty" --out "$empty/index.html"
+          test -f "$empty/index.html"
+          grep -q "What works best" "$empty/index.html"
+          grep -q "No goal set" "$empty/index.html"
+          grep -q "Follower goal" "$empty/index.html"
+
+      - name: Netlify build refuses empty data/
+        run: |
+          if bash scripts/netlify-build.sh; then
+            echo "expected netlify-build.sh to fail on empty data/" >&2
+            exit 1
+          fi
+
+      - name: Shell syntax
+        run: |
+          bash -n scripts/publish.sh
+          bash -n scripts/netlify-build.sh
+          bash -n scripts/check_no_real_data.sh
+          bash -n scripts/check_tmp_hygiene.sh
+          bash -n .githooks/pre-commit
+          bash -n scripts/setup.sh
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Type-check edge function
+        run: deno check netlify/edge-functions/auth.ts
+
+      - name: Deno tests for Basic Auth helpers
+        run: deno test --allow-read netlify/edge-functions/auth_test.ts

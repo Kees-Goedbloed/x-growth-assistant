@@ -1,0 +1,28 @@
+[project]
+name = "x-growth-assistant"
+version = "0.1.0"
+description = "Offline builder for a single-file X (Twitter) growth dashboard"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [{ name = "Lein AI Systems" }]
+
+# Runtime: Python standard library only. Dev tools are in requirements-dev.txt.
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+extend-exclude = ["vendor", "test-fixtures/data"]
+
+[tool.ruff.lint]
+select = ["E", "F"]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"test-fixtures/make_fixtures.py" = ["E401", "E702"]
+"tests/conftest.py" = ["E402"]
+"build.py" = ["F841"]
+"tests/test_chart_helpers.py" = ["F841"]
+
+[tool.ruff.format]
+quote-style = "preserve"

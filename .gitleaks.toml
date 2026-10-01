@@ -1,0 +1,17 @@
+# Secret scan for CI (`gitleaks detect`) and optional local pre-commit.
+# Vendor minified JS is allowlisted; do not put secrets there.
+
+title = "x-growth-assistant"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "vendor, generated fixtures, documented Basic Auth placeholders"
+paths = [
+  '''(^|/)vendor/''',
+  '''(^|/)test-fixtures/data/''',
+]
+regexes = [
+  '''USER:PASS''',
+]

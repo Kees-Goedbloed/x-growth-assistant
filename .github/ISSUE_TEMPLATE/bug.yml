@@ -1,0 +1,19 @@
+name: Bug report
+description: Something does not work as documented
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: Do not attach real X exports, passwords, or other people's handles.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: Steps, expected vs actual. Use fixture/`--mode public` examples when you can.
+    validations:
+      required: true
+  - type: input
+    id: build
+    attributes:
+      label: Build command
+      placeholder: python3 build.py

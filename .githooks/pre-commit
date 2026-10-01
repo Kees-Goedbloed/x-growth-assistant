@@ -1,0 +1,10 @@
+#!/bin/sh
+# Optional local secret scan. Enable with:
+#   git config core.hooksPath .githooks
+# CI always runs gitleaks even if this hook is not installed.
+set -e
+if command -v gitleaks >/dev/null 2>&1; then
+  exec gitleaks protect --staged --redact --verbose --config .gitleaks.toml
+fi
+echo "gitleaks not installed; skipping local scan (CI still runs it). See CONTRIBUTING.md"
+exit 0

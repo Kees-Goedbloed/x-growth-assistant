@@ -1,0 +1,16 @@
+{
+  "account": "demo_owner",
+  "display_name": "Demo Owner",
+  "mode": "public",
+  "site_url": "https://example.com",
+  "repo_url": "https://github.com/example/x-growth-assistant",
+  "og_image_url": "",
+  "profile_image_url": "",
+  "avatar_cache": "",
+  "lang": "en",
+  "csv_timezone": "UTC",
+  "goal_followers": null,
+  "goal_date": null,
+  "goal_posts_per_day": 2,
+  "goal_replies_per_day": 10
+}

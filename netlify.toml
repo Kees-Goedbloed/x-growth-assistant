@@ -1,0 +1,21 @@
+[build]
+  command = "bash scripts/netlify-build.sh"
+  publish = "dist"
+
+[build.environment]
+  PYTHON_VERSION = "3.12"
+
+# Protect every path. Whether auth runs is DASHBOARD_MODE on the site
+# (only the exact value "public" turns Basic Auth off). Indexing headers are
+# written per-mode into dist/_headers (not here), so the public site is not
+# noindexed by a global netlify.toml rule.
+
+[[edge_functions]]
+  path = "/*"
+  function = "auth"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "no-referrer"

@@ -1,0 +1,1 @@
+Follow AGENTS.md. On a fresh clone run ./scripts/setup.sh (or make setup) before editing. Never commit real data, .env, or avatars. Public builds must pass the leak checker.
