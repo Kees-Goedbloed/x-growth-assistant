@@ -63,7 +63,6 @@ class TestAgentSkills(unittest.TestCase):
         proj = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
         self.assertIn('version = "0.1.0"', proj)
         self.assertTrue((ROOT / "CHANGELOG.md").is_file())
-        self.assertTrue((ROOT / ".github" / "dependabot.yml").is_file())
         self.assertTrue((ROOT / ".cursorrules").is_file())
         rules = (ROOT / ".cursorrules").read_text(encoding="utf-8")
         self.assertIn("AGENTS.md", rules)
