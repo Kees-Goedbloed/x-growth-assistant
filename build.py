@@ -45,6 +45,8 @@ AMS = ZoneInfo("Europe/Amsterdam")
 BASE = os.path.dirname(os.path.abspath(__file__))
 TEMPLATE = os.path.join(BASE, "template.html")
 ASSETS_OG = os.path.join(BASE, "assets", "og-image.png")
+DEFAULT_SOURCE_REPO = "https://github.com/Kees-Goedbloed/x-growth-assistant"
+OG_IMAGE_W, OG_IMAGE_H = 1200, 630
 AVATAR_STEM = "avatar"
 AVATAR_FILENAME = "avatar.jpg"
 UNAVATAR_TMPL = "https://unavatar.io/x/{handle}"
@@ -1335,39 +1337,33 @@ def to_public_payload(payload, owner, data_dir, followers_dir, buckets, bucket_k
     }
 
 
-def head_extra(mode, cfg, account, display_name):
+def head_extra(mode, cfg, account, display_name, site_url=None, source_repo=None):
     if mode != "public":
         return ""
-    site = str(cfg.get("site_url") or "").rstrip("/")
-    if display_name and account:
-        title = f"{display_name} (@{account})"
-    elif display_name:
-        title = display_name
-    elif account:
-        title = f"@{account}"
-    else:
-        title = "X growth dashboard"
-    desc = cfg.get("og_description") or (
-        "Public growth dashboard: your own growth and aggregated replies, without other people's names."
-    )
-    og_img = cfg.get("og_image_url") or (
-        f"{site}/assets/og-image.png" if site else "/assets/og-image.png"
-    )
-    parts = []
-    if site:
-        parts.append(f'<link rel="canonical" href="{html_esc(site)}">')
-    parts.extend([
+    cfg = cfg if isinstance(cfg, dict) else {}
+    site = site_url if site_url is not None else resolve_site_url(cfg)
+    title = public_page_title(account, display_name)
+    desc = str(cfg.get("og_description") or "").strip() or public_og_description(account, display_name)
+    configured = resolve_http_url(cfg.get("og_image_url"))
+    og_img = configured or (f"{site}/assets/og-image.png" if site else "/assets/og-image.png")
+    alt = f"{title} — public X growth dashboard"
+    parts = [
         f'<meta property="og:title" content="{html_esc(title)}">',
         f'<meta property="og:description" content="{html_esc(desc)}">',
         f'<meta property="og:image" content="{html_esc(og_img)}">',
+        f'<meta property="og:image:width" content="{OG_IMAGE_W}">',
+        f'<meta property="og:image:height" content="{OG_IMAGE_H}">',
+        f'<meta property="og:image:alt" content="{html_esc(alt)}">',
+        '<meta property="og:type" content="website">',
         '<meta name="twitter:card" content="summary_large_image">',
         f'<meta name="twitter:title" content="{html_esc(title)}">',
         f'<meta name="twitter:description" content="{html_esc(desc)}">',
         f'<meta name="twitter:image" content="{html_esc(og_img)}">',
-    ])
+        f'<meta name="twitter:image:alt" content="{html_esc(alt)}">',
+    ]
     if site:
+        parts.insert(0, f'<link rel="canonical" href="{html_esc(site)}">')
         parts.append(f'<meta property="og:url" content="{html_esc(site)}">')
-        parts.append('<meta property="og:type" content="website">')
     return "\n".join(parts)
 
 
@@ -1741,6 +1737,79 @@ def resolve_build_mode(cli_mode, cfg):
     return "public"
 
 
+def resolve_http_url(*candidates):
+    """First absolute http(s) URL, trailing slash stripped. Empty if none."""
+    for v in candidates:
+        s = str(v or "").strip().rstrip("/")
+        if s.startswith("https://") or s.startswith("http://"):
+            return s
+    return ""
+
+
+def resolve_site_url(cfg):
+    """Canonical public origin. Config wins; SITE_URL / PUBLIC_SITE_URL / URL are fallbacks."""
+    cfg = cfg if isinstance(cfg, dict) else {}
+    return resolve_http_url(
+        cfg.get("site_url"),
+        os.environ.get("SITE_URL"),
+        os.environ.get("PUBLIC_SITE_URL"),
+        os.environ.get("URL"),
+    )
+
+
+def resolve_source_repo(cfg):
+    cfg = cfg if isinstance(cfg, dict) else {}
+    return resolve_http_url(cfg.get("source_repo_url")) or DEFAULT_SOURCE_REPO
+
+
+def public_page_title(account, display_name):
+    name = str(display_name or "").strip()
+    handle = str(account or "").strip()
+    if name and handle:
+        return f"{name} (@{handle})"
+    if name:
+        return name
+    if handle:
+        return f"@{handle}"
+    return "X growth dashboard"
+
+
+def public_og_description(account, display_name):
+    name = str(display_name or "").strip()
+    handle = str(account or "").strip()
+    who = name or (f"@{handle}" if handle else "")
+    if who:
+        return (
+            f"{who}'s public X growth dashboard. Followers, posts, and what works. "
+            "Other people's handles are stripped."
+        )
+    return (
+        "A public X growth dashboard. Followers, posts, and what works. "
+        "Other people's handles are stripped."
+    )
+
+
+def visitor_intro_html(account, display_name, source_repo):
+    """Short public-page explainer. Never mentions demo, sample, or fake data."""
+    name = html_esc(str(display_name or "").strip())
+    handle = html_esc("@" + account) if account else ""
+    if name and handle:
+        lead = f"{name}'s public X growth dashboard ({handle})."
+    elif name:
+        lead = f"{name}'s public X growth dashboard."
+    elif handle:
+        lead = f"{handle}'s public X growth dashboard."
+    else:
+        lead = "This public X growth dashboard."
+    repo = html_esc(source_repo or DEFAULT_SOURCE_REPO)
+    return (
+        f'<p class="visitor-lead">{lead}</p>'
+        "<p>Followers, posts, and what works on this account. "
+        "Other people's handles are stripped.</p>"
+        f'<p class="visitor-src"><a href="{repo}" rel="noopener">Free source on GitHub</a></p>'
+    )
+
+
 def maybe_use_demo_fixtures(data_dir, using_default):
     if not using_default or data_has_real_inputs(data_dir):
         return data_dir, False
@@ -1787,8 +1856,9 @@ def main():
             warn(f"config.json unreadable: {e}")
     account = norm_handle(cfg.get("account")) or ""
     display_name = str(cfg.get("display_name") or "").strip()
-    site_url = str(cfg.get("site_url") or "").strip()
+    site_url = resolve_site_url(cfg)
     repo_url = str(cfg.get("repo_url") or "").strip()
+    source_repo = resolve_source_repo(cfg)
     og_image_url = str(cfg.get("og_image_url") or "").strip()
     lang = "en"
     try:
@@ -1854,6 +1924,7 @@ def main():
             "display_name": display_name,
             "site_url": site_url,
             "repo_url": repo_url,
+            "source_repo_url": source_repo,
             "og_image_url": og_image_url,
             "lang": lang,
             "mode": mode,
@@ -1890,6 +1961,7 @@ def main():
         payload["meta"]["display_name"] = display_name
         payload["meta"]["site_url"] = site_url
         payload["meta"]["repo_url"] = repo_url
+        payload["meta"]["source_repo_url"] = source_repo
         payload["meta"]["lang"] = lang
         payload["meta"]["today"] = today
         payload["meta"]["generated_at"] = now.isoformat(timespec="seconds")
@@ -1929,7 +2001,32 @@ def main():
     html = tpl.replace("/*__DATA__*/{}", blob)
     html = html.replace("__HTML_LANG__", "en")
     html = html.replace("__MODE__", mode)
-    html = html.replace("<!--__HEAD_EXTRA__-->", head_extra(mode, cfg, account, display_name))
+    html = html.replace(
+        "<!--__HEAD_EXTRA__-->",
+        head_extra(mode, cfg, account, display_name, site_url=site_url, source_repo=source_repo),
+    )
+    if mode == "public":
+        html = html.replace(
+            "<title>X growth dashboard</title>",
+            f"<title>{html_esc(public_page_title(account, display_name))}</title>",
+            1,
+        )
+        html = html.replace(
+            '<aside id="visitor-intro" class="visitor-intro" hidden><!--__VISITOR_INTRO__--></aside>',
+            f'<aside id="visitor-intro" class="visitor-intro">{visitor_intro_html(account, display_name, source_repo)}</aside>',
+            1,
+        )
+        html = html.replace(
+            '<footer id="dash-footer" hidden></footer>',
+            (
+                f'<footer id="dash-footer">'
+                f'<a href="{html_esc(source_repo)}" rel="noopener">Free source on GitHub</a>'
+                f"</footer>"
+            ),
+            1,
+        )
+    else:
+        html = html.replace("<!--__VISITOR_INTRO__-->", "")
     html = inject_vendors(html)
     os.makedirs(os.path.dirname(out) or ".", exist_ok=True)
     tmp = out + ".tmp"

@@ -32,7 +32,7 @@ Python 3.12+ is enough. Open `index.html` with `file://` or `./serve.sh`.
 | `data/public_allowlist.json` | optional extra leak-check exceptions | **ignored** |
 | `.env` | hosted deploy secrets | **ignored** — copy from `.env.example` |
 | `test-fixtures/data/` | `make_fixtures.py` / default empty build | **ignored**, fictional |
-| `assets/og-image.png` | demo title card | committed |
+| `assets/og-image.png` | public share card (1200×630) | committed |
 | `assets/avatar.*` | owner photo | **ignored** |
 
 `build.py` always reads `data/followers/*.json` and `data/analytics-csv/*.csv`. Point the collector’s `--followers-dir` at `data/followers/` and a local `python3 build.py` picks snapshots up with **no extra flags**. An extra read-only folder is `--followers-dir DIR` or `publish.sh`’s `X_FOLLOWERS_DIR`. `data/followers/` wins on the same `captured_at`.

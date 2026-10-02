@@ -101,6 +101,13 @@ section{grid-column:span 12;background:var(--card);border:1px solid var(--line);
 .delta.tl-green{color:var(--tl-green)}.delta.tl-yellow{color:var(--tl-yellow)}.delta.tl-orange{color:var(--tl-orange)}.delta.tl-red{color:var(--tl-red)}
 .tl-legend{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin:8px 0 0;font-size:11px;color:var(--mut)}
 .tl-legend i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.judge-legend{margin:6px 0 8px}
+.judge-legend i{width:10px;height:10px}
+.judge-scale{display:inline-flex;align-items:center;gap:0;margin-right:8px}
+.judge-scale i{margin-right:2px;border-radius:2px}
+.judge-legend i.thin{background:var(--tl-yellow);opacity:.42}
+html[data-theme="light"] .judge-legend i.thin{background:var(--tl-yellow);opacity:.38}
+.judge-advice{margin:4px 0 0;font-size:12px;color:var(--mut);font-weight:500;line-height:1.35}
 .cal-wrap{margin:0;min-width:0;width:max-content;max-width:100%;overflow-x:auto;--cal-n:10;--cal-gap:4px;--cal-wd:36px;--cal-sz:22px}
 .cal-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
 .cal-grid-wrap{display:grid;grid-template-columns:var(--cal-wd) max-content;grid-template-rows:auto auto;gap:4px 8px;width:max-content;max-width:100%;min-width:0}
@@ -229,7 +236,7 @@ h3{font-size:13px;margin:0 0 8px;color:var(--txt);text-transform:none;letter-spa
   .cal-grid{width:max-content}
   .kpi{padding:8px 8px}
   .kpi .v{font-size:clamp(18px,5vw,24px)}
-  header,main,nav,.bar,footer{padding-left:10px;padding-right:10px}
+  header,main,nav,.bar,footer,.visitor-intro{padding-left:10px;padding-right:10px}
   main.dash,main{grid-template-columns:1fr;gap:10px;padding-top:10px}
   #s2,#s3,#s4,#s5,#sr,#hp,#hr,section{grid-column:span 1}
   .grid2,.ww{grid-template-columns:1fr}
@@ -301,6 +308,12 @@ h3{font-size:13px;margin:0 0 8px;color:var(--txt);text-transform:none;letter-spa
   .brand{max-width:11rem}
 }
 footer{display:none;padding:16px 22px 32px;color:var(--mut);font-size:13px;border-top:1px solid var(--line);min-width:0;max-width:100%}
+footer:not([hidden]){display:block}
+.visitor-intro{display:none;max-width:1440px;margin:10px auto 0;padding:14px 18px 14px 16px;color:var(--mut);font-size:13px;line-height:1.45;background:var(--card);border:1px solid var(--line);border-radius:12px;border-left:4px solid var(--acc)}
+.visitor-intro:not([hidden]){display:block}
+.visitor-intro p{margin:0 0 4px}
+.visitor-lead{color:var(--txt);font-size:15px;font-weight:650}
+.visitor-src{margin-top:8px}
 
 </style>
 </head>
@@ -342,6 +355,7 @@ footer{display:none;padding:16px 22px 32px;color:var(--mut);font-size:13px;borde
   <button type="button" id="more-btn" aria-label="More" aria-expanded="false">⋯</button>
 </div>
 <div id="demo-strip" class="demo-strip" hidden>Demo data</div>
+<aside id="visitor-intro" class="visitor-intro" hidden><!--__VISITOR_INTRO__--></aside>
 <nav>
   <a href="#s1" data-nav="overview">Overview</a><a href="#s2" data-nav="followers">Followers</a><a href="#s3" data-nav="posts">Posts</a><a href="#s4" data-nav="engagement">Engagement</a>
   <a href="#s5" data-nav="replies">Replies</a><a href="#s6" data-nav="patterns">Top posts</a>
@@ -375,6 +389,7 @@ const REPLY_BUCKETS = D.reply_buckets || [];
 const ACC = META.account || '';
 const DISPLAY = META.display_name || '';
 const REPO = META.repo_url || '';
+const SOURCE_REPO = META.source_repo_url || '';
 const IS_PUBLIC = META.mode === 'public';
 const IS_DEMO = META.demo === true;
 const LANG = 'en';
@@ -424,6 +439,8 @@ const HASH_NL={'0':'no hashtag','1-2':'1–2 hashtags','3+':'3+ hashtags'};
 const LINE_NL={single:'one block',multi:'multiple lines'};
 const IC=META.insights||{};
 const MINN=IC.min_n||5;
+const JUDGE_K=(IC.judge_k!=null&&IC.judge_k>0)?+IC.judge_k:3;
+const HINT_MIN_W=0.5;
 const ROI=META.roi||{};
 const LOW_ROI_N=ROI.low_min_replies||5;
 const LOW_ROI_IMP=ROI.low_max_mean_impressions||30;
@@ -506,9 +523,26 @@ function clipPrevLine(vals,hi,days){const data=[],marks=[];(days||[]).forEach(d=
 function tipRaw(p){if(!p)return null;if(p.data&&p.data.raw!=null)return p.data.raw;return p.value;}
 function heatTheme(){return (typeof document!=='undefined'&&document.documentElement&&document.documentElement.getAttribute('data-theme')==='light')?'light':'dark';}
 function heatEmptyColor(){return heatTheme()==='light'?'#e2e8f0':'#243044';}
-function heatLowColor(){return heatTheme()==='light'?'#60a5fa':'#3b6ea8';}
-function heatColors(){return heatTheme()==='light'?['#60a5fa','#3b82f6','#2563eb','#1d4ed8','#1e3a8a']:['#3b6ea8','#3b82f6','#60a5fa','#93c5fd','#bfdbfe'];}
-function heatMapped(val,mn,mx){if(val==null||!isFinite(val))return null;const span=mx-mn;if(!(span>0))return 1;return Math.sqrt(Math.max(0,Math.min(1,(val-mn)/span)));}
+function heatLowColor(){return heatTheme()==='light'?'#94a3b8':'#64748b';}
+function heatColors(){return ['red','orange','yellow','green'].map(t=>tlHex(t));}
+function heatMapped(val,mn,mx){if(val==null||!isFinite(val))return null;const span=mx-mn;if(!(span>0))return 0.5;return Math.sqrt(Math.max(0,Math.min(1,(val-mn)/span)));}
+function heatThinDecal(){const light=heatTheme()==='light';return {symbol:'rect',dashArrayX:[1,0],dashArrayY:[2,5],rotation:Math.PI/4,color:light?'rgba(255,255,255,.55)':'rgba(11,15,20,.5)'};}
+function judgePeers(vals){return (vals||[]).filter(v=>v!=null&&isFinite(v));}
+function judgeImps(posts){return judgePeers((posts||[]).map(p=>p&&p.impressions));}
+function judgePrior(posts){return med(judgeImps(posts));}
+function judgeWeight(n,k){k=(k==null||!(k>0))?JUDGE_K:k;const nn=(n!=null&&n>0)?n:0;return nn/(nn+k);}
+function judgeFull(n,k){return judgeWeight(n,k)>=0.6;}
+function judgeOpacity(n,k){const w=judgeWeight(n,k);const op=0.38+0.62*w;return judgeHintable(n,k)?op:op*0.72;}
+function shrinkLog(cellLog,n,priorLog,k){k=(k==null||!(k>0))?JUDGE_K:k;if(cellLog==null||!isFinite(cellLog))return (priorLog!=null&&isFinite(priorLog))?priorLog:null;if(priorLog==null||!isFinite(priorLog))return cellLog;const nn=(n!=null&&n>0)?n:0;return (nn/(nn+k))*cellLog+(k/(nn+k))*priorLog;}
+function shrinkImp(cellImp,n,priorImp,k){const cell=(cellImp==null||!isFinite(cellImp)||cellImp<0)?null:cellImp;const prior=(priorImp==null||!isFinite(priorImp)||priorImp<0)?null:priorImp;if(cell==null)return prior;if(prior==null||cell===prior)return cell;const sl=shrinkLog(Math.log1p(cell),n,Math.log1p(prior),k);return sl==null?null:Math.expm1(sl);}
+function judgeLow(cellImp,n,priorImp,k){k=(k==null||!(k>0))?JUDGE_K:k;const sl=shrinkLog((cellImp==null||!isFinite(cellImp)||cellImp<0)?null:Math.log1p(cellImp),n,(priorImp==null||!isFinite(priorImp)||priorImp<0)?null:Math.log1p(priorImp),k);if(sl==null||!isFinite(sl))return null;const nn=(n!=null&&n>0)?n:0;return Math.expm1(sl-1/Math.sqrt(nn+k));}
+function judgeHintable(n,k){return judgeWeight(n,k)>=HINT_MIN_W;}
+function poolHour(stats,d,h){const cur=stats&&stats[d+'-'+h];const left=h>0&&stats?stats[d+'-'+(h-1)]:null;const right=h<23&&stats?stats[d+'-'+(h+1)]:null;const parts=[];const add=(s,w)=>{if(!s||!(s.n>0)||s.imp==null||!isFinite(s.imp))return;parts.push({w:w*s.n,m:Math.log1p(s.imp)});};add(cur,1);add(left,0.5);add(right,0.5);const nEff=parts.reduce((t,p)=>t+p.w,0);if(!(nEff>0))return {n:cur&&cur.n||0,nEff:0,imp:cur&&cur.imp,cellLog:null};const cellLog=parts.reduce((t,p)=>t+p.w*p.m,0)/nEff;return {n:cur&&cur.n||0,nEff,imp:cur&&cur.imp,cellLog};}
+function judgeToneFromShrink(shrunkImp,pool){if(shrunkImp==null||!isFinite(shrunkImp))return '';return trafficLightScore(percentileRank(shrunkImp,pool)*100);}
+function judgeTone(val,peers,n,prior){if(val==null||!isFinite(val))return '';const pool=judgePeers(peers);const p=prior!=null&&isFinite(prior)?prior:med(pool);return judgeToneFromShrink(shrinkImp(val,n,p),pool);}
+function judgeLabel(tone,n){const word={green:'above your usual',yellow:'about your usual',orange:'a bit below your usual',red:'below your usual'}[tone]||'';if(n!=null&&n<MINN)return (word?word+' · ':'')+'hint (not proven)';return word;}
+function judgeColor(tone){if(!tone||tone==='thin')return heatLowColor();return tlHex(tone);}
+function judgeLegend(){return `<div class="tl-legend judge-legend" role="note"><span class="judge-scale"><i style="background:var(--tl-red)"></i><i style="background:var(--tl-orange)"></i><i style="background:var(--tl-yellow)"></i><i style="background:var(--tl-green)"></i>worse → better vs your usual post</span><span><i class="thin"></i>fainter = fewer posts, treat as a hint</span></div>`;}
 function hexLum(hex){let h=String(hex||'').replace('#','');if(h.length===3)h=h[0]+h[0]+h[1]+h[1]+h[2]+h[2];if(h.length<6)return 0;const r=parseInt(h.slice(0,2),16)/255,g=parseInt(h.slice(2,4),16)/255,b=parseInt(h.slice(4,6),16)/255;const lin=c=>c<=0.03928?c/12.92:Math.pow((c+0.055)/1.055,2.4);return 0.2126*lin(r)+0.7152*lin(g)+0.0722*lin(b);}
 function contrastRatio(a,b){const L1=hexLum(a),L2=hexLum(b);const hi=Math.max(L1,L2),lo=Math.min(L1,L2);return (hi+0.05)/(lo+0.05);}
 function ratesClose(a,b){if(a==null||b==null||!isFinite(a)||!isFinite(b))return false;const d=Math.abs(a-b);return d<1e-9||d<=Math.max(Math.abs(a),Math.abs(b),1)*1e-6;}
@@ -1224,7 +1258,7 @@ function slotLbl(wd,hr){return WD[wd]+' '+String(hr).padStart(2,'0')+':00–'+St
 function lowNote(n){return n<MINN?` <span class="pill p-warn">too little data</span>`:'';}
 function grpRows(items,keyFn){const g={};for(const p of items){const k=keyFn(p);if(k==null||k==='')continue;(g[k]=g[k]||[]).push(p);}return Object.keys(g).sort().map(k=>{const a=g[k],n=a.length;return{k,n,low:n<MINN,_cls:n<MINN?'lowdata':'',medImp:med(a.map(p=>p.impressions)),medEr:med(a.map(p=>p.er)),medLikes:med(a.map(p=>p.likes)),medReplies:med(a.map(p=>p.replies)),medReposts:med(a.map(p=>p.reposts)),medBm:med(a.map(p=>p.bookmarks)),vis1k:med(a.map(p=>p.visits_per_1k)),fol1k:med(a.map(p=>p.follows_per_1k))};});}
 function insightCols(label){return[{key:'label',label:label,fmt:(v,r)=>esc(v)+lowNote(r.n)},{key:'n',label:'n',num:1,fmt:fN},{key:'medImp',label:'Median impr.',num:1,fmt:f1},{key:'medEr',label:'Median ER',num:1,fmt:fP},{key:'medLikes',label:'Med. likes',num:1,fmt:f1},{key:'medReplies',label:'Med. replies',num:1,fmt:f1},{key:'medReposts',label:'Med. reposts',num:1,fmt:f1},{key:'medBm',label:'Med. bookmarks',num:1,fmt:f1},{key:'vis1k',label:'Profile vis. / 1k impr.',num:1,fmt:f1},{key:'fol1k',label:'New followers / 1k impr.',num:1,fmt:f1}];}
-function miniBars(rows,valKey){const vis=rows.filter(r=>r[valKey]!=null);if(!vis.length)return '';const mx=Math.max(1,...vis.map(r=>r[valKey]));const n=vis.length;
+function miniBars(rows,valKey,pool){const vis=rows.filter(r=>r[valKey]!=null);if(!vis.length)return '';const mx=Math.max(1,...vis.map(r=>r[valKey]));const n=vis.length;
   const displayW=chartDisplayWidth(false);const iw=typeof innerWidth==='undefined'?displayW:innerWidth;const narrow=iw<=640;
   const catFont=narrow?11:12;
   const labels=vis.map(r=>String(r.label||''));
@@ -1233,10 +1267,17 @@ function miniBars(rows,valKey){const vis=rows.filter(r=>r[valKey]!=null);if(!vis
   const H=Math.max(120,12+n*(narrow?30:24)+8);
   const theme=typeof document!=='undefined'&&document.documentElement.getAttribute('data-theme')==='light';
   const outside=theme?'#111827':'#e8eef3';
+  const imps=judgePeers(pool&&pool.length?pool:vis.flatMap(r=>Array(Math.max(1,r.n||1)).fill(r[valKey])));
+  const prior=med(imps);
   const option={
     animationDuration:240,
-    tooltip:{trigger:'axis',confine:true,appendToBody:false,axisPointer:{type:'shadow'},formatter:p=>{
-      const r=vis[p[0].dataIndex];return `${esc(r.label)} · n=${fN(r.n)} · ${metricBarLabel(r,valKey)}`;
+    tooltip:{trigger:'axis',confine:true,appendToBody:false,axisPointer:{type:'shadow'},
+      extraCssText:'max-width:'+Math.max(160,displayW-24)+'px;white-space:normal;word-break:break-word;',
+      formatter:p=>{
+      const r=vis[p[0].dataIndex];
+      const tone=judgeTone(r[valKey],imps,r.n,prior);
+      const verdict=judgeLabel(tone,r.n);
+      return `${esc(r.label)} · n=${fN(r.n)}<br/>${metricBarLabel(r,valKey)}${verdict?'<br/>'+verdict:''}`;
     }},
     grid:{left:8,right:narrow?20:28,top:8,bottom:8,containLabel:true},
     xAxis:{type:'value',axisLabel:{formatter:v=>axFmt(v)}},
@@ -1249,10 +1290,14 @@ function miniBars(rows,valKey){const vis=rows.filter(r=>r[valKey]!=null);if(!vis
         const v=r[valKey];
         const short=metricBarShort(r,valKey);
         const inside=(v/mx)>=(narrow?0.38:0.32);
+        const tone=judgeTone(v,imps,r.n,prior);
+        const fill=judgeColor(tone);
+        const ink=contrastRatio('#111827',fill)>=contrastRatio('#ffffff',fill)?'#111827':'#ffffff';
+        const hint=!!(r.n<MINN);
         return {
           value:v,
-          itemStyle:{color:r.low?'#64748b':'#3b82f6',opacity:r.low?0.45:1},
-          label:{show:true,position:inside?'insideRight':'right',formatter:short,fontSize:narrow?10:11,color:inside?'#fff':outside,distance:inside?4:6}
+          itemStyle:{color:fill,opacity:judgeOpacity(r.n),decal:hint?heatThinDecal():undefined},
+          label:{show:true,position:inside?'insideRight':'right',formatter:short,fontSize:narrow?10:11,color:inside?ink:outside,distance:inside?4:6}
         };
       }),
       barMaxWidth:18
@@ -1272,34 +1317,50 @@ function heatSvg(posts,valFn,kind){const cells={};for(const p of posts){if(p.hou
     data.push([h,d,s.n&&s.val!=null?s.val:null,s]);
   }
   const gapColor=document.documentElement.getAttribute('data-theme')==='light'?'#eef2f6':'#0b0f14';
-  const emptyC=heatEmptyColor();const lowC=heatLowColor();
+  const emptyC=heatEmptyColor();const lowC=heatLowColor();const colors=heatColors();
+  const pool=judgeImps(posts);const prior=med(pool);
+  for(let d=0;d<7;d++)for(let h=0;h<24;h++){
+    const s=stats[d+'-'+h];
+    s.shrink=(s.n&&s.imp!=null)?shrinkImp(s.imp,s.n,prior):null;
+    s.low=(s.n&&s.imp!=null)?judgeLow(s.imp,s.n,prior):null;
+    s.weight=judgeWeight(s.n);s.full=judgeFull(s.n);
+    s.tone=(s.n&&s.shrink!=null)?judgeToneFromShrink(s.shrink,pool):'';
+  }
   const mapped=data.map(r=>{
-    const raw=r[2];const t=heatMapped(raw,rng.min,rng.max);
-    return {value:[r[0],r[1],t==null?0:t],raw,stats:r[3],empty:t==null,itemStyle:t==null?{color:emptyC}:undefined};
+    const raw=r[2];const s=r[3]||{};const n=s.n||0;
+    const t=heatMapped(raw,rng.min,rng.max);
+    const empty=t==null||!n;
+    const hint=!empty&&n<MINN;
+    const tone=empty?'':s.tone;
+    const p=empty||s.shrink==null?0:percentileRank(s.shrink,pool);
+    const itemStyle=empty?{color:emptyC}:{color:judgeColor(tone),opacity:judgeOpacity(n)};
+    return {value:[r[0],r[1],p],raw,stats:s,empty,thin:hint,hint,tone,full:!!s.full,weight:s.weight,shrink:s.shrink,low:s.low,itemStyle};
   });
   const option={
     animationDuration:240,
-    tooltip:{confine:true,formatter:p=>{
+    tooltip:{confine:true,extraCssText:'max-width:'+Math.max(160,displayW-24)+'px;white-space:normal;word-break:break-word;',formatter:p=>{
       const raw=p.data||{};const s=(raw&&raw.stats)||{};const d=(raw.value||[])[1],h=(raw.value||[])[0];
       const hh=String(h).padStart(2,'0')+':00';
       const n=s.n||0;
       const unit=pluralize(n,kind==='reply'?'reply':'post');
-      const bits=[WD[d]+' '+hh, n+' '+unit];
+      const bits=[WD[d]+' '+hh+' · '+n+' '+unit];
       if(s.imp!=null) bits.push('median '+fN(Math.round(s.imp))+' impr.');
-      return bits.join(' · ');
+      if(n){const verdict=judgeLabel(raw.tone,n);if(verdict)bits.push(verdict);}
+      else bits.push('no posts');
+      return bits.join('<br/>');
     }},
     grid:{left:narrow?4:8,right:8,top:8,bottom:28,containLabel:true},
     xAxis:{type:'category',data:hours,axisLabel:{interval:hourStep-1,fontSize:11}},
     yAxis:{type:'category',data:WD,inverse:true,axisLabel:{fontSize:11}},
-    visualMap:{show:false,min:0,max:1,inRange:{color:heatColors()}},
+    visualMap:{show:false,min:0,max:1,type:'piecewise',inRange:{color:colors},pieces:[{gte:0.75,lte:1,color:colors[3]},{gte:0.50,lt:0.75,color:colors[2]},{gte:0.25,lt:0.50,color:colors[1]},{gte:0,lt:0.25,color:colors[0]}]},
     series:[{type:'heatmap',data:mapped,itemStyle:{borderRadius:3,borderColor:gapColor,borderWidth:2},emphasis:{itemStyle:{borderColor:'#e8eef3',borderWidth:1}}}]
   };
-  option.__xdashHeat={min:rng.min,max:rng.max,low:lowC,empty:emptyC,card:heatTheme()==='light'?'#ffffff':'#121820'};
-  return {html:`<div class="hmwrap">${enqueueChart('heat',option,narrow?220:240,'echart-heat')}</div>`,stats};}
+  option.__xdashHeat={min:rng.min,max:rng.max,low:lowC,empty:emptyC,card:heatTheme()==='light'?'#ffffff':'#121820',colors:colors,prior:prior};
+  return {html:`<div class="hmwrap">${enqueueChart('heat',option,narrow?220:240,'echart-heat')}${judgeLegend()}${slotAdviceHtml(stats,kind)}</div>`,stats};}
 
 const HEAT_MIN_COV=0.25;
 function heatCoverage(stats,minN){minN=minN==null?MINN:minN;let ok=0,n=0;for(let d=0;d<7;d++)for(let h=0;h<24;h++){n++;if(((stats[d+'-'+h]||{}).n||0)>=minN)ok++;}return n?ok/n:0;}
-function heatPanel(title,posts,valFn){if(!posts||!posts.length)return fold(title,EMPTY);if(posts.every(p=>p.hour==null))return fold(title,'<div class="empty">No timestamps</div>');const heat=heatSvg(posts,valFn,/reply/i.test(title)?'reply':'post');const body=heatCoverage(heat.stats)<HEAT_MIN_COV?'<div class="note">Not enough data yet</div>':heat.html;return fold(title,body);}
+function heatPanel(title,posts,valFn){if(!posts||!posts.length)return fold(title,EMPTY);if(posts.every(p=>p.hour==null))return fold(title,'<div class="empty">No timestamps</div>');const heat=heatSvg(posts,valFn,/reply/i.test(title)?'reply':'post');return fold(title,heat.html);}
 function heatCard(title,posts,valFn,kind){
   if(!posts||!posts.length)return `<h3>${esc(title)}</h3>`+EMPTY;
   if(posts.every(p=>p.hour==null))return `<h3>${esc(title)}</h3>`+emptyMsg('No timestamps');
@@ -1307,7 +1368,17 @@ function heatCard(title,posts,valFn,kind){
   return `<h3>${esc(title)}</h3>`+heat.html;
 }
 function topSlots(stats,n=3){const rows=[];for(let d=0;d<7;d++)for(let h=0;h<24;h++){const s=stats[d+'-'+h];if(!s||s.n<MINN||s.val==null)continue;rows.push({d,h,label:slotLbl(d,h),...s});}
-  rows.sort((a,b)=>b.val-a.val||b.n-a.n);return rows.slice(0,n);}
+  rows.sort((a,b)=>(b.shrink!=null&&a.shrink!=null?b.shrink-a.shrink:b.val-a.val)||b.n-a.n);return rows.slice(0,n);}
+function hintSlots(stats,n=3){const rows=[];for(let d=0;d<7;d++)for(let h=0;h<24;h++){const s=stats[d+'-'+h];if(!s||!(s.n>0)||s.low==null||!judgeHintable(s.n))continue;rows.push({d,h,label:slotLbl(d,h),...s});}
+  rows.sort((a,b)=>(b.low-a.low)||b.n-a.n);return rows.slice(0,n);}
+function slotAdviceHtml(stats,kind){
+  const verb=kind==='reply'?'reply':'post';
+  const proven=topSlots(stats,3);
+  if(proven.length)return `<div class="judge-advice">Best time to ${verb}: ${esc(proven.map(t=>t.label+' (n='+t.n+')').join(', '))}.</div>`;
+  const hints=hintSlots(stats,1);
+  if(hints.length){const u=pluralize(hints[0].n,verb);return `<div class="judge-advice">Strongest so far: ${esc(hints[0].label)} (${fN(hints[0].n)} ${u}). No hour is proven yet.</div>`;}
+  return `<div class="judge-advice">No hour is proven yet.</div>`;
+}
 function missingNotes(P){const notes=[];if(!P.length)return notes;
   const noTime=P.filter(p=>p.hour==null).length;
   if(noTime)notes.push(`${fN(noTime)} post(s) have no timestamp (date only, or the snowflake id did not match the CSV date). Heatmaps use <code>created_at</code> with a time, or the time from the X snowflake (Post id / <code>/status/&lt;id&gt;</code>).`);
@@ -1324,9 +1395,11 @@ function autoSummary(own,replies,mediaRows){const bits=[];
   const ownHeat=heatSvg(own,a=>med(a.map(p=>p.er))??med(a.map(p=>p.impressions)));
   const tops=topSlots(ownHeat.stats,3);
   if(tops.length)bits.push('Best time to post: '+tops.map(t=>t.label+' (n='+t.n+')').join(', ')+'.');
+  else{const h=hintSlots(ownHeat.stats,1);if(h.length)bits.push('Strongest post time so far: '+h[0].label+' (n='+h[0].n+'). No hour is proven yet.');}
   const rHeat=heatSvg(replies,a=>med(a.map(p=>p.impressions)));
   const rTop=topSlots(rHeat.stats,3);
   if(rTop.length)bits.push('Best time to reply: '+rTop.map(t=>t.label+' (n='+t.n+')').join(', ')+'.');
+  else{const h=hintSlots(rHeat.stats,1);if(h.length)bits.push('Strongest reply time so far: '+h[0].label+' (n='+h[0].n+'). No hour is proven yet.');}
   const video=mediaRows.find(r=>r.k==='video'&&!r.low),text=mediaRows.find(r=>r.k==='text'&&!r.low);
   if(video&&text&&text.medImp>0&&video.medImp!=null){const x=video.medImp/text.medImp;bits.push(`Video outperforms text-only by ${f1(x)}× on median impressions (n=${video.n} vs ${text.n}).`);}
   if(!bits.length)return `Too little data (n &lt; ${MINN} per group) for a summary.`;
@@ -1343,7 +1416,7 @@ function secBest(){
   if(replies.length){
     h+=heatPanel('Best reply time',replies,a=>med(a.map(p=>p.impressions)));
   }
-  let extra='<div class="disc">Correlation in the supplied data, not proof of causation. Figures are <b>median</b> (not mean). Groups with n &lt; '+MINN+' are grey with “too little data”. Times in Europe/Amsterdam. The period filter above applies here too.</div>';
+  let extra='<div class="disc">Correlation in the supplied data, not proof of causation. Figures are <b>median</b> (not mean). Colour is each slot versus <b>your usual post</b>, pulled toward that average when n is small. Fainter cells are hints. A named “best time” needs n ≥ '+MINN+'. Times in Europe/Amsterdam. The period filter above applies here too.</div>';
   extra+=`<div class="warnbox">${autoSummary(own,replies,mediaRows)}</div>`;
   for(const n of missingNotes(P))extra+=`<div class="note">${n}</div>`;
 
@@ -1351,14 +1424,14 @@ function secBest(){
   if(!own.length)extra+=emptyMsg('No own posts/quotes in this period.');
   else{const heat=heatSvg(own,a=>{const e=med(a.map(p=>p.er));return e!=null?e:med(a.map(p=>p.impressions));});
     extra+=heat.html;const top=topSlots(heat.stats,3);
-    extra+=top.length?'<ul class="toplist">'+top.map(t=>`<li><b>${esc(t.label)}</b> — n=${fN(t.n)}, median impr. ${f1(t.imp)}, median ER ${fP(t.er)}</li>`).join('')+'</ul>':'<div class="note">No time slot with n ≥ '+MINN+' yet.</div>';
+    if(top.length)extra+='<ul class="toplist">'+top.map(t=>`<li><b>${esc(t.label)}</b> — n=${fN(t.n)}, median impr. ${f1(t.imp)}, median ER ${fP(t.er)}</li>`).join('')+'</ul>';
     if(own.every(p=>p.hour==null))extra+='<div class="empty">Heatmap not available: no timestamps in the data. Supply <code>created_at</code> with a time, or a Post id whose snowflake matches the CSV date (README).</div>';}
 
   extra+='<h3>Best time to reply</h3>';
   if(!replies.length)extra+=emptyMsg('No replies to others in this period.');
   else{const heat=heatSvg(replies,a=>med(a.map(p=>p.impressions)));
     extra+=heat.html;const top=topSlots(heat.stats,3);
-    extra+=top.length?'<ul class="toplist">'+top.map(t=>`<li><b>${esc(t.label)}</b> — n=${fN(t.n)}, median impr. ${f1(t.imp)}, median profile visits ${f1(t.vis)}, median new followers ${f1(t.fol)}</li>`).join('')+'</ul>':'<div class="note">No time slot with n ≥ '+MINN+' yet.</div>';}
+    if(top.length)extra+='<ul class="toplist">'+top.map(t=>`<li><b>${esc(t.label)}</b> — n=${fN(t.n)}, median impr. ${f1(t.imp)}, median profile visits ${f1(t.vis)}, median new followers ${f1(t.fol)}</li>`).join('')+'</ul>';}
 
   extra+='<h3>Reply speed</h3>';
   const sped=replies.filter(p=>p.reply_speed);
@@ -1366,9 +1439,9 @@ function secBest(){
   else if(!sped.length)extra+='<div class="empty">not available in the current data</div>';
   else{const rows=grpRows(sped,p=>p.reply_speed).map(r=>Object.assign(r,{label:SPEED_NL[r.k]||r.k}));
     const order=['15m','1h','4h','later'];rows.sort((a,b)=>order.indexOf(a.k)-order.indexOf(b.k));
-    extra+=miniBars(rows,'medImp')+table('ispeed',insightCols('Speed'),rows,null);}
+    extra+=miniBars(rows,'medImp',judgeImps(sped))+table('ispeed',insightCols('Speed'),rows,null);}
 
-  function block(title,note,rows,tid){extra+=`<h3>${title}</h3>`;if(!rows.length){extra+=emptyMsg('No groups.');return;}extra+=miniBars(rows,'medImp')+table(tid,insightCols('Group'),rows,null);}
+  function block(title,note,rows,tid){extra+=`<h3>${title}</h3>`;if(!rows.length){extra+=emptyMsg('No groups.');return;}extra+=miniBars(rows,'medImp',judgeImps(tid==='ikind'?P:cmp))+table(tid,insightCols('Group'),rows,null);}
   block('Type','post / reply / quote / repost / thread (self-reply chain).',
     grpRows(P,p=>p.kind||p.type).map(r=>Object.assign(r,{label:KIND_NL[r.k]||r.k})),'ikind');
   block('Media','Explicit <code>media</code> field; otherwise only a clear external URL → “link”. Rest: unknown.',
@@ -1386,15 +1459,15 @@ function secBest(){
     ['Starts as list/number',p=>p.feat_list_start?'yes':'no',v=>v==='yes'?'starts with a number/list':'otherwise','ilist'],
     ['Line breaks',p=>p.feat_lines,v=>LINE_NL[v]||v,'ilines']
   ];
-  for(const [title,kf,lf,tid] of featBlocks){const rows=grpRows(cmp,kf).map(r=>Object.assign(r,{label:lf(r.k)}));extra+=`<h3 style="text-transform:none;letter-spacing:0;font-size:13px;color:var(--txt)">${title}</h3>`+miniBars(rows,'medImp')+table(tid,insightCols('Group'),rows,null);}
+  for(const [title,kf,lf,tid] of featBlocks){const rows=grpRows(cmp,kf).map(r=>Object.assign(r,{label:lf(r.k)}));extra+=`<h3 style="text-transform:none;letter-spacing:0;font-size:13px;color:var(--txt)">${title}</h3>`+miniBars(rows,'medImp',judgeImps(cmp))+table(tid,insightCols('Group'),rows,null);}
   const langRows=grpRows(cmp.filter(p=>p.lang==='nl'||p.lang==='en'),p=>p.lang).map(r=>Object.assign(r,{label:r.k==='nl'?'Dutch':'English'}));
-  if(langRows.length){extra+='<h3 style="text-transform:none;letter-spacing:0;font-size:13px;color:var(--txt)">Language (simple NL/EN)</h3>'+miniBars(langRows,'medImp')+table('ilang',insightCols('Group'),langRows,null);}
+  if(langRows.length){extra+='<h3 style="text-transform:none;letter-spacing:0;font-size:13px;color:var(--txt)">Language (simple NL/EN)</h3>'+miniBars(langRows,'medImp',judgeImps(cmp))+table('ilang',insightCols('Group'),langRows,null);}
   extra+='<h3>Top 5 recipes</h3>';
   const recG={};
   for(const p of own){if(!p.media_kind||p.media_kind==='unknown'||!p.length_bucket||!p.daypart)continue;const k=p.media_kind+'|'+p.length_bucket+'|'+p.daypart;(recG[k]=recG[k]||[]).push(p);}
   const recs=Object.keys(recG).map(k=>{const a=recG[k],[mk,lb,dp]=k.split('|');return{k,label:(MK_NL[mk]||mk)+' + '+(LEN_NL[lb]||lb).split(' ')[0]+' + '+(DP_NL[dp]||dp).split(' ')[0],n:a.length,low:a.length<MINN,_cls:a.length<MINN?'lowdata':'',medImp:med(a.map(p=>p.impressions)),medEr:med(a.map(p=>p.er)),medLikes:med(a.map(p=>p.likes)),medReplies:med(a.map(p=>p.replies)),medReposts:med(a.map(p=>p.reposts)),medBm:med(a.map(p=>p.bookmarks)),vis1k:med(a.map(p=>p.visits_per_1k)),fol1k:med(a.map(p=>p.follows_per_1k))};}).filter(r=>r.n>=MINN).sort((a,b)=>(b.medImp||0)-(a.medImp||0)).slice(0,5);
   if(!recs.length)extra+=emptyMsg('No recipe with n ≥ '+MINN+' yet (media + length + daypart).');
-  else extra+=miniBars(recs,'medImp')+table('irec',insightCols('Recipe'),recs,null);
+  else extra+=miniBars(recs,'medImp',judgeImps(own))+table('irec',insightCols('Recipe'),recs,null);
   h+=fold('Analysis',extra);
   return h;}
 
@@ -1635,7 +1708,7 @@ function canvasHeatReply(){
   return heatCard('Best time to reply',replies,a=>med(a.map(p=>p.impressions)));
 }
 function canvasBest(){
-  let h=`<h3>What works best</h3>`;
+  let h=`<h3>What works best</h3>`+judgeLegend();
   if(!POSTS.length)return h+EMPTY;
   const P=POSTS.filter(p=>inR(p.local_date));
   if(!P.length)return h+EMPTY;
@@ -1645,19 +1718,19 @@ function canvasBest(){
     return grpRows(items,keyFn).map(r=>Object.assign(r,{label:labFn(r.k)}));
   }
   const blocks=[
-    ['Media',rows(cmp,p=>mediaKindOf(p),mediaLabel)],
-    ['Length',rows(cmp,p=>p.length_bucket==='long_form'?'long':p.length_bucket,k=>({short:'Short',medium:'Medium',long:'Long'}[k]||k))],
-    ['Type',rows(P,p=>p.kind||p.type,k=>KIND_NL[k]||k)]
+    ['Media',rows(cmp,p=>mediaKindOf(p),mediaLabel),judgeImps(cmp)],
+    ['Length',rows(cmp,p=>p.length_bucket==='long_form'?'long':p.length_bucket,k=>({short:'Short',medium:'Medium',long:'Long'}[k]||k)),judgeImps(cmp)],
+    ['Type',rows(P,p=>p.kind||p.type,k=>KIND_NL[k]||k),judgeImps(P)]
   ];
   const sped=replies.filter(p=>p.reply_speed);
   if(sped.length){
     const r=rows(sped,p=>p.reply_speed,k=>SPEED_NL[k]||k);
     const order=['15m','1h','4h','later'];r.sort((a,b)=>order.indexOf(a.k)-order.indexOf(b.k));
-    blocks.push(['Reply speed',r]);
+    blocks.push(['Reply speed',r,judgeImps(sped)]);
   }
   h+='<div class="ww">';
-  for(const [title,rr] of blocks){
-    h+=`<div><h3>${esc(title)} · median impressions</h3>${miniBars(rr,'medImp')||EMPTY}</div>`;
+  for(const [title,rr,pool] of blocks){
+    h+=`<div><h3>${esc(title)} · median impressions</h3>${miniBars(rr,'medImp',pool)||EMPTY}</div>`;
   }
   return h+'</div>';
 }
@@ -1759,7 +1832,9 @@ document.addEventListener('pointerdown',e=>{const more=document.getElementById('
 document.addEventListener('toggle',e=>{const t=e.target;if(!t||t.tagName!=='DETAILS')return;if(t.classList.contains('bar-custom'))syncPeriodButtons();if(t.open)setTimeout(()=>fitAxisFonts(t),0);},true);
 window.addEventListener('resize',()=>fitAxisFonts());
 (function setupChrome(){
-  const title = DISPLAY ? (DISPLAY + (ACC ? ' — @'+ACC : '')) : (ACC ? STR.title+' — @'+ACC : STR.genericTitle);
+  const title = IS_PUBLIC
+    ? (DISPLAY && ACC ? DISPLAY+' (@'+ACC+')' : (DISPLAY || (ACC ? '@'+ACC : STR.genericTitle)))
+    : (DISPLAY ? (DISPLAY + (ACC ? ' — @'+ACC : '')) : (ACC ? STR.title+' — @'+ACC : STR.genericTitle));
   document.title = title;
   const h = document.getElementById('dash-title');
   if(h) h.textContent = DISPLAY || STR.genericTitle;
@@ -1776,14 +1851,22 @@ window.addEventListener('resize',()=>fitAxisFonts());
   document.querySelectorAll('nav a[data-nav]').forEach(a=>{const k=a.getAttribute('data-nav'); if(STR[k]) a.textContent=STR[k];});
   const ft = document.getElementById('dash-footer');
   if(ft){
-    if(REPO){ ft.hidden=false; ft.innerHTML = `<a href="${esc(REPO)}" rel="noopener">${esc(STR.footer)}</a>`; }
-    else { ft.hidden=true; ft.innerHTML=''; }
+    if(IS_PUBLIC && SOURCE_REPO){
+      ft.hidden=false;
+      ft.innerHTML = `<a href="${esc(SOURCE_REPO)}" rel="noopener">Free source on GitHub</a>`;
+    }else if(REPO){
+      ft.hidden=false;
+      ft.innerHTML = `<a href="${esc(REPO)}" rel="noopener">${esc(STR.footer)}</a>`;
+    }else{
+      ft.hidden=true;
+      ft.innerHTML='';
+    }
   }
   bindAvatarFallbacks();
 })();
 try{const t=localStorage.getItem('xdash-theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t);}catch(e){}
 window.addEventListener('resize',()=>resizeCharts());
-window.__xdash={get state(){return state;},get charts(){return EC_INST;},chartDays,followerDays,firstFollowerDate,shownRangeLabel,prevFullyCovered,paceOverDays,forecastHorizon,heatRange,forecastBand,followersOn,bindDateHover,clipPrevLine,stdev,dailyChanges,heatMapped,heatLowColor,heatEmptyColor,heatColors,contrastRatio,hexLum,robustYMax,SCORE,percentileRank,weightedEng,valueScore,dayScore,consistencyScore,currentStreak,trafficLightScore,trafficLightDelta,scoredPosts,postPermalink,lastDataDate,lastCompleteDay,isIncompleteDay,completeDays,pluralize,kpiCompleteRange,streakDays,calendarDays,CAL_WEEKS_MAX,latestFollowers,weekdaySummary,avatarImgFallback,bindAvatarFallbacks,compactN,yCatLabelWidth,metricBarLabel,metricBarShort};
+window.__xdash={get state(){return state;},get charts(){return EC_INST;},chartDays,followerDays,firstFollowerDate,shownRangeLabel,prevFullyCovered,paceOverDays,forecastHorizon,heatRange,forecastBand,followersOn,bindDateHover,clipPrevLine,stdev,dailyChanges,heatMapped,heatLowColor,heatEmptyColor,heatColors,heatThinDecal,judgeTone,judgeLabel,judgeColor,judgeLegend,judgePeers,judgeImps,judgePrior,judgeWeight,judgeFull,judgeOpacity,judgeLow,judgeHintable,shrinkLog,shrinkImp,poolHour,judgeToneFromShrink,hintSlots,topSlots,JUDGE_K,HINT_MIN_W,MINN,contrastRatio,hexLum,robustYMax,SCORE,percentileRank,weightedEng,valueScore,dayScore,consistencyScore,currentStreak,trafficLightScore,trafficLightDelta,scoredPosts,postPermalink,lastDataDate,lastCompleteDay,isIncompleteDay,completeDays,pluralize,kpiCompleteRange,streakDays,calendarDays,CAL_WEEKS_MAX,latestFollowers,weekdaySummary,avatarImgFallback,bindAvatarFallbacks,compactN,yCatLabelWidth,metricBarLabel,metricBarShort};
 if(!TODAY){document.querySelector('main').innerHTML='<section>'+EMPTY+'</section>';return;}
 setPreset('30');
 })();

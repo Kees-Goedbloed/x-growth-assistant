@@ -19,7 +19,15 @@
 #   scripts/netlify-build.sh against empty git data/.
 set -euo pipefail
 
-ALLOWED_REPO="kees-goedbloed/x-growth-assistant"
+# Origin guard: publish only from a checkout of the code repo (never from a
+# data repo). Default is the canonical public repo; a fork sets
+# XGA_ALLOWED_REPO=<owner>/<repo> (case-insensitive) to allow its own origin.
+DEFAULT_ALLOWED_REPO="kees-goedbloed/x-growth-assistant"
+
+allowed_repo() {
+  local repo="${XGA_ALLOWED_REPO:-$DEFAULT_ALLOWED_REPO}"
+  printf '%s\n' "${repo,,}"
+}
 
 origin_repo() {
   local url="${1:-}"
@@ -33,15 +41,18 @@ origin_repo() {
 origin_allowed() {
   local repo
   repo="$(origin_repo "${1:-}")"
-  [[ "${repo,,}" == "$ALLOWED_REPO" ]]
+  [[ -n "$repo" && "${repo,,}" == "$(allowed_repo)" ]]
 }
 
 require_origin() {
   local url repo
-  url="$(git remote get-url origin)"
+  if ! url="$(git remote get-url origin 2>/dev/null)"; then
+    echo "Weiger: geen git-remote 'origin'. Clone de repo met git (zip-downloads hebben geen origin)." >&2
+    exit 1
+  fi
   repo="$(origin_repo "$url")"
   if ! origin_allowed "$url"; then
-    echo "Weiger: origin is niet Kees-Goedbloed/x-growth-assistant (gevonden: ${repo:-onbekend})." >&2
+    echo "Weiger: origin is niet $(allowed_repo) (gevonden: ${repo:-onbekend}). Fork? Zet XGA_ALLOWED_REPO=<owner>/<repo>." >&2
     exit 1
   fi
 }
@@ -195,6 +206,9 @@ main() {
 
   echo "Kopieer inputs naar tijdelijke map (niet naar git data/)"
   export XDASH_AVATAR_CACHE="${XDASH_AVATAR_CACHE:-$SOURCE_DATA_DIR/.avatar-cache}"
+  if [[ -n "${PUBLIC_SITE_URL:-}" && -z "${SITE_URL:-}" ]]; then
+    export SITE_URL="$PUBLIC_SITE_URL"
+  fi
   stage_inputs "$work"
   build_mode "$work" private "$priv"
   build_mode "$work" public "$pub"

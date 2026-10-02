@@ -301,6 +301,7 @@ class TestPublicRepoHygiene(unittest.TestCase):
             "CLAUDE.md",
             "CODE_OF_CONDUCT.md",
             "docs/daily-routine.md",
+            "docs/PLAN-supabase.md",
         ):
             text = (ROOT / rel).read_text(encoding="utf-8")
             self.assertNotIn("/workspace", text, rel)

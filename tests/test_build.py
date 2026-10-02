@@ -52,6 +52,7 @@ class TestEmptyBuild(unittest.TestCase):
             self.assertEqual(payload["posts"], [])
             self.assertFalse(payload.get("meta", {}).get("demo"), payload.get("meta"))
             self.assertEqual(payload["meta"]["insights"]["min_n"], 5)
+            self.assertEqual(payload["meta"]["insights"]["judge_k"], 3)
             self.assertIsNone(payload["meta"]["goal"]["followers"])
             self.assertIsNone(payload["meta"]["goal"]["date"])
             self.assertEqual(payload["meta"]["roi"]["low_min_replies"], 5)

@@ -17,7 +17,7 @@ TEMPLATE = (ROOT / "template.html").read_text(encoding="utf-8")
 
 
 def _extract_fn(src: str, name: str) -> str:
-    needle = f"function {name}"
+    needle = f"function {name}("
     i = src.find(needle)
     if i < 0:
         raise AssertionError(f"missing function {name}")
@@ -143,6 +143,11 @@ class TestTemplateChartHelpersSource(unittest.TestCase):
         self.assertIn("metricBarShort", mini)
         self.assertIn("insideRight", mini)
         self.assertIn("type:'bar'", mini.replace(" ", ""))
+        self.assertIn("judgeTone", mini)
+        self.assertIn("judgeColor", mini)
+        self.assertIn("judgeLabel", mini)
+        self.assertIn("judgeOpacity", mini)
+        self.assertIn("heatThinDecal", mini)
 
     def test_heatmap_reserves_phone_label_space(self):
         heat = _extract_fn(TEMPLATE, "heatSvg")
@@ -161,6 +166,14 @@ class TestTemplateChartHelpersSource(unittest.TestCase):
         self.assertIn("containLabel:true", mini.replace(" ", ""))
         self.assertIn("yCatLabelWidth", mini)
         self.assertIn("function compactN", TEMPLATE)
+        self.assertIn("judgeLegend", _extract_fn(TEMPLATE, "canvasBest"))
+        self.assertIn("function judgeTone", TEMPLATE)
+        self.assertIn("function judgeLegend", TEMPLATE)
+        self.assertIn("const JUDGE_K=", TEMPLATE)
+        self.assertIn("function shrinkImp", TEMPLATE)
+        self.assertIn("function hintSlots", TEMPLATE)
+        self.assertIn("function judgeLow", TEMPLATE)
+        self.assertIn("function judgeHintable", TEMPLATE)
         self.assertIn("impressions", _extract_fn(TEMPLATE, "metricBarLabel"))
         self.assertIn("confine:true", mini.replace(" ", ""))
 
@@ -409,7 +422,18 @@ class TestRound3SourceGuards(unittest.TestCase):
         self.assertIn("impr.", heat)
         self.assertIn("heatMapped", heat)
         self.assertIn("heatColors", heat)
-        self.assertIn("1e3a8a", _extract_fn(TEMPLATE, "heatColors"))
+        self.assertIn("judgeTone", heat)
+        self.assertIn("judgeLegend", heat)
+        self.assertIn("judgeLabel", heat)
+        self.assertIn("shrinkImp", heat)
+        self.assertIn("judgeLow", heat)
+        self.assertIn("slotAdviceHtml", heat)
+        self.assertIn("judgeOpacity", heat)
+        self.assertNotIn("heatThinDecal", heat)
+        self.assertNotIn("not a recommendation", heat)
+        self.assertIn("hint (not proven)", TEMPLATE)
+        self.assertIn("tlHex", _extract_fn(TEMPLATE, "heatColors"))
+        self.assertIn("22c55e", _extract_fn(TEMPLATE, "tlHex"))
         self.assertIn("function heatRange", TEMPLATE)
         self.assertNotIn("0c1929", heat)
 
@@ -715,6 +739,7 @@ class TestRound4NodeHelpers(unittest.TestCase):
             _extract_fn(TEMPLATE, "contrastRatio"),
             _extract_fn(TEMPLATE, "heatTheme"),
             _extract_fn(TEMPLATE, "heatEmptyColor"),
+            _extract_fn(TEMPLATE, "tlHex"),
             _extract_fn(TEMPLATE, "heatLowColor"),
             _extract_fn(TEMPLATE, "heatColors"),
             r"""
@@ -739,6 +764,7 @@ const bandVar=forecastBand(center,['2026-09-25','2026-09-26','2026-09-27'],'2026
 const mappedLow=heatMapped(14,14,144);
 const mappedMid=heatMapped(14+(144-14)/2,14,144);
 const mappedHi=heatMapped(144,14,144);
+const mappedFlat=heatMapped(14,14,14);
 const globalDocument={documentElement:{_t:'dark',getAttribute(){return this._t;},setAttribute(k,v){if(k==='data-theme')this._t=v;}}};
 global.document=globalDocument;
 const darkLow=heatLowColor();
@@ -755,7 +781,7 @@ const out={
   band3: band3.width,
   bandVar: bandVar.width,
   std,
-  mappedLow, mappedMid, mappedHi,
+  mappedLow, mappedMid, mappedHi, mappedFlat,
   darkLow, darkEmpty, lightLow, lightEmpty,
   darkLowC: contrastRatio(darkLow,'#121820'),
   darkEmptyC: contrastRatio(darkEmpty,'#121820'),
@@ -794,12 +820,86 @@ console.log(JSON.stringify(out));
         self.assertEqual(self.out["mappedLow"], 0)
         self.assertEqual(self.out["mappedHi"], 1)
         self.assertAlmostEqual(self.out["mappedMid"], 0.5 ** 0.5, places=6)
+        self.assertEqual(self.out["mappedFlat"], 0.5)
         self.assertGreater(self.out["darkLowC"], self.out["darkEmptyC"], self.out)
         self.assertGreater(self.out["lightLowC"], self.out["lightEmptyC"], self.out)
         self.assertGreaterEqual(self.out["darkLowC"], 2.0, self.out)
         self.assertGreaterEqual(self.out["lightLowC"], 1.8, self.out)
         self.assertGreaterEqual(self.out["darkEmptyC"], 1.15, self.out)
         self.assertGreaterEqual(self.out["lightEmptyC"], 1.05, self.out)
-        self.assertIn("1e3a8a", "".join(self.out["colorsLight"]))
-        self.assertEqual(self.out["darkLow"], "#3b6ea8")
-        self.assertEqual(self.out["lightLow"], "#60a5fa")
+        colors = "".join(self.out["colorsLight"])
+        self.assertIn("15803d", colors)
+        self.assertIn("b91c1c", colors)
+        self.assertNotIn("1e3a8a", colors)
+        self.assertEqual(self.out["darkLow"], "#64748b")
+        self.assertEqual(self.out["lightLow"], "#94a3b8")
+
+
+@unittest.skipUnless(_node_bin(), "node is required to execute extracted chart helpers")
+class TestJudgeScaleNode(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.node = _node_bin()
+        bits = [
+            "const MINN=5;",
+            "const JUDGE_K=3;",
+            "const SCORE={lights:{green:75,yellow:50,orange:25}};",
+            _extract_fn(TEMPLATE, "med"),
+            _extract_fn(TEMPLATE, "percentileRank"),
+            _extract_fn(TEMPLATE, "trafficLightScore"),
+            _extract_fn(TEMPLATE, "tlHex"),
+            _extract_fn(TEMPLATE, "heatTheme"),
+            _extract_fn(TEMPLATE, "heatLowColor"),
+            _extract_fn(TEMPLATE, "judgePeers"),
+            _extract_fn(TEMPLATE, "judgeWeight"),
+            _extract_fn(TEMPLATE, "shrinkLog"),
+            _extract_fn(TEMPLATE, "shrinkImp"),
+            _extract_fn(TEMPLATE, "judgeToneFromShrink"),
+            _extract_fn(TEMPLATE, "judgeTone"),
+            _extract_fn(TEMPLATE, "judgeLabel"),
+            _extract_fn(TEMPLATE, "judgeColor"),
+            r"""
+const globalDocument={documentElement:{_t:'dark',getAttribute(){return this._t;}}};
+global.document=globalDocument;
+const peers=[14,80,144,400,900,2800];
+const out={
+  thin: judgeTone(2800, peers, 2),
+  thinLabel: judgeLabel(judgeTone(2800, peers, 2), 2),
+  thinColor: judgeColor(judgeTone(2800, peers, 2)),
+  strong: judgeTone(2800, peers, 6),
+  strongLabel: judgeLabel(judgeTone(2800, peers, 6), 6),
+  weak: judgeTone(14, peers, 6),
+  weakLabel: judgeLabel(judgeTone(14, peers, 6), 6),
+  midAlone: judgeTone(500, [500], 6),
+  midEqual: judgeTone(80, [80,80,80], 8),
+  grey: heatLowColor(),
+  peers: judgePeers([null, 3, undefined, 9])
+};
+console.log(JSON.stringify(out));
+""",
+        ]
+        r = subprocess.run(
+            [cls.node, "-e", "\n".join(bits)],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+        )
+        if r.returncode != 0:
+            raise AssertionError(f"node judge helpers failed\n{r.stdout}\n{r.stderr}")
+        cls.out = json.loads(r.stdout.strip().splitlines()[-1])
+
+    def test_thin_data_is_a_hint_not_grey(self):
+        self.assertIn(self.out["thin"], ("green", "yellow", "orange", "red"), self.out)
+        self.assertNotEqual(self.out["thin"], "thin", self.out)
+        self.assertIn("hint (not proven)", self.out["thinLabel"], self.out)
+        self.assertNotEqual(self.out["thinColor"], "#64748b", self.out)
+        self.assertEqual(self.out["grey"], "#64748b")
+
+    def test_enough_data_uses_traffic_lights(self):
+        self.assertEqual(self.out["strong"], "green")
+        self.assertEqual(self.out["strongLabel"], "above your usual")
+        self.assertEqual(self.out["weak"], "red")
+        self.assertEqual(self.out["weakLabel"], "below your usual")
+        self.assertEqual(self.out["midAlone"], "yellow")
+        self.assertEqual(self.out["midEqual"], "yellow")
+        self.assertEqual(self.out["peers"], [3, 9])

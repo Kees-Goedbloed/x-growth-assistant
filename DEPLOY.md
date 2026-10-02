@@ -56,6 +56,7 @@ See `.env.example` for the same names. Never commit `.env`.
 | Variable | Value |
 |---|---|
 | `DASHBOARD_MODE` | exactly `public` |
+| `SITE_URL` or `PUBLIC_SITE_URL` | optional canonical origin (`https://dashboard.example.com`) so public Open Graph tags get an absolute `og:image`. `data/config.json` `site_url` wins if set. |
 
 Do **not** set `DASHBOARD_USER` / `DASHBOARD_PASSWORD` on the public site (unused when
 mode is `public`).
@@ -104,6 +105,9 @@ cd /path/to/x-growth-assistant
 ```
 
 `publish.sh` never runs `git add` / `git commit` / `git push`.
+
+It only runs from a git checkout whose `origin` is `Kees-Goedbloed/x-growth-assistant`.
+On a fork, set `XGA_ALLOWED_REPO=<owner>/<repo>` (your fork) so the origin guard accepts it.
 
 Needs Netlify CLI ≥ 12.2.8 (`netlify` on PATH, or `npx --yes netlify-cli`).
 

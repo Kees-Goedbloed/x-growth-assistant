@@ -66,6 +66,29 @@ class TestPublishScript(unittest.TestCase):
             code = r.stdout.strip().splitlines()[-1]
             self.assertEqual(code, "0" if ok else "1", f"{url} -> {r.stdout!r} {r.stderr!r}")
 
+    def test_origin_fork_override(self):
+        script = ROOT / "scripts" / "publish.sh"
+        cases = [
+            ("", "https://github.com/someone/my-fork", False),
+            ("someone/my-fork", "https://github.com/someone/my-fork.git", True),
+            ("Someone/My-Fork", "git@github.com:someone/my-fork.git", True),
+            ("someone/my-fork", "https://github.com/Kees-Goedbloed/x-growth-assistant", False),
+            ("", "", False),
+        ]
+        for override, url, ok in cases:
+            env = dict(os.environ)
+            env.pop("XGA_ALLOWED_REPO", None)
+            if override:
+                env["XGA_ALLOWED_REPO"] = override
+            r = subprocess.run(
+                ["bash", "-c",
+                 'source "$1"; origin_allowed "$2" && echo 0 || echo 1',
+                 "bash", str(script), url],
+                capture_output=True, text=True, check=True, env=env,
+            )
+            code = r.stdout.strip().splitlines()[-1]
+            self.assertEqual(code, "0" if ok else "1", f"{override!r} {url} -> {r.stdout!r} {r.stderr!r}")
+
     def test_missing_env_fails(self):
         env = repo_guard.origin_git_env()
         for k in ("SOURCE_DATA_DIR", "X_FOLLOWERS_DIR", "NETLIFY_SITE_ID_PUBLIC",

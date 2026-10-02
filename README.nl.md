@@ -224,9 +224,10 @@ Kopieer `data/config.example.json` (fictieve waarden; `goal_followers` / `goal_d
 |---|---|
 | `account` | X-handle (geen hardcoded default; zet dit in config) |
 | `display_name` | in de header; zonder waarde: generieke titel |
-| `site_url` | canonical / Open Graph URL (public mode) |
-| `repo_url` | footer-link “Built with x-growth-assistant”; leeg = verborgen |
-| `og_image_url` | override OG-afbeelding (default `/assets/og-image.png`) |
+| `site_url` | canonical / Open Graph URL (public mode). Nodig voor een absolute `og:image` op X. `SITE_URL` / `PUBLIC_SITE_URL` / `URL` zijn fallbacks. |
+| `repo_url` | privé-footer “Built with x-growth-assistant”; leeg = verborgen |
+| `source_repo_url` | publieke “Free source on GitHub”-link (default `https://github.com/Kees-Goedbloed/x-growth-assistant`) |
+| `og_image_url` | override OG-afbeelding (default `{site_url}/assets/og-image.png`) |
 | `lang` | `nl` (default) of `en` voor header/footer/sectietitels |
 | `csv_timezone` | tijdzone voor CSV-tijden zonder offset (default `UTC`) |
 | `goal_followers` | optioneel, positief geheel getal: volgersdoel. **Niet committen met een echte waarde.** Ontbreekt het (of `null`/leeg) samen met `goal_date`, dan crasht de build niet: het dashboard toont de Nederlandse noot *Nog geen doel ingesteld (goal_followers / goal_date in data/config.json)* plus het huidige tempo en een prognose. |

@@ -9,9 +9,9 @@ Built by Kees Goedbloed, AI manager at Lein AI Systems.
 
 English UI is the default (`lang` is always `en` in the built HTML). Full data-format docs: **[README.nl.md](README.nl.md)**.
 
-![Demo title card (fixture data only)](assets/og-image.png)
+![Share card for public builds](assets/og-image.png)
 
-The screenshot above is a branded preview generated from **bundled demo fixtures**, not a live account. A fresh clone builds that same fictional dataset.
+The image is the 1200×630 Open Graph / X card used when a public dashboard link is shared. A fresh clone builds bundled demo fixtures for the HTML itself — your own X exports stay on your machine.
 
 ## 5-minute quickstart
 
@@ -79,7 +79,7 @@ python3 build.py --data test-fixtures/data --mode private --out /tmp/index.test.
 | Stays on your machine (never git) | Safe to publish / share |
 |---|---|
 | `data/` snapshots, CSVs, `config.json`, research dumps | This repository: builder, templates, **example** configs, demo fixtures generator |
-| `assets/avatar.*`, `.avatar-cache/` | `assets/og-image.png` (demo title card) |
+| `assets/avatar.*`, `.avatar-cache/` | `assets/og-image.png` (public share card) |
 | `.env`, Netlify tokens, site IDs, `DASHBOARD_PASSWORD` | `.env.example`, `data/config.example.json` |
 | Private HTML (`--mode private`) with other people's handles | Public HTML (default): your growth metrics, stripped of other handles |
 | Hosted private site (Basic Auth) | Hosted public site (`DASHBOARD_MODE=public`, no auth) |
@@ -102,9 +102,10 @@ Copy `data/config.example.json` to `data/config.json` (gitignored). Goals in the
 | `mode` | `public` (default, shareable) or `private` (keeps other handles). CLI `--mode` wins if set. |
 | `account` | X handle (no hardcoded default) |
 | `display_name` | Shown in the header; generic title if empty |
-| `site_url` | Canonical / Open Graph URL (public mode) |
-| `repo_url` | Footer “Built with x-growth-assistant”; hidden if empty |
-| `og_image_url` | Override OG image (default `/assets/og-image.png`) |
+| `site_url` | Canonical / Open Graph URL (public mode). Needed for an absolute `og:image` when the link is posted on X. `SITE_URL` / `PUBLIC_SITE_URL` / `URL` are fallbacks if this is empty. |
+| `repo_url` | Private-build footer “Built with x-growth-assistant”; hidden if empty |
+| `source_repo_url` | Public-page “Free source on GitHub” link (default `https://github.com/Kees-Goedbloed/x-growth-assistant`) |
+| `og_image_url` | Override OG image (default `{site_url}/assets/og-image.png`, or `/assets/og-image.png`) |
 | `profile_image_url` | Optional owner avatar (local path or `https://`). HTTP `pbs.twimg.com` `_normal`/`_bigger` URLs are upgraded to `_400x400`. If empty, the builder tries an exported owner URL, then `api.fxtwitter.com/<account>` (`user.avatar_url`), then `https://unavatar.io/x/<account>`. Saved as `assets/avatar.png` or `.jpg` from the bytes; never hotlinked at runtime. |
 | `avatar_lookup` | Set `false` to skip fxtwitter/unavatar (tests / offline). |
 | `avatar_cache` | Persistent cache directory (default `{data}/.avatar-cache`, or `XDASH_AVATAR_CACHE`). Reused across fresh publish temp dirs; refetch at most once per day. Gitignored. |

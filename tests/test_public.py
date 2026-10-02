@@ -19,14 +19,14 @@ import repo_guard  # noqa: E402,F401
 from tiny_avatar import fixture_avatar_bytes  # noqa: E402
 
 
-def run_build(data: Path, out: Path, today="2026-09-25", mode="private", extra=None):
+def run_build(data: Path, out: Path, today="2026-09-25", mode="private", extra=None, env=None):
     cmd = [sys.executable, str(ROOT / "build.py"), "--data", str(data),
            "--mode", mode, "--out", str(out), "--today", today]
     if extra:
         cmd.extend(["--followers-dir", str(extra)])
     else:
         cmd.append("--no-followers")
-    r = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True)
+    r = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, env=env)
     if r.returncode != 0:
         raise AssertionError(f"build failed mode={mode}\n{r.stdout}\n{r.stderr}")
     return r
@@ -269,8 +269,11 @@ class TestPublicVsPrivateMini(unittest.TestCase):
 
     def test_header_footer_from_config(self):
         self.assertIn("Demo Owner", self.pub_html)
-        self.assertIn("https://github.com/example/x-growth-assistant", self.pub_html)
-        self.assertIn("Built with x-growth-assistant", self.pub_html)
+        self.assertIn("https://github.com/Kees-Goedbloed/x-growth-assistant", self.pub_html)
+        self.assertIn("Free source on GitHub", self.pub_html)
+        self.assertIn("public X growth dashboard", self.pub_html)
+        self.assertIn("Built with x-growth-assistant", self.priv_html)
+        self.assertIn("https://github.com/example/x-growth-assistant", self.priv_html)
 
     def test_public_ui_hides_private_tables(self):
         self.assertIn("Replies by audience", self.pub_html)

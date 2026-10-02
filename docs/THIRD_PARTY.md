@@ -15,5 +15,6 @@ to build a dashboard:
 |---|---|
 | ruff 0.13.2 | MIT |
 | pip-audit 2.9.0 | Apache-2.0 |
+| pillow 12.3.0 | HPND |
 
 There are no other pip runtime dependencies to audit.

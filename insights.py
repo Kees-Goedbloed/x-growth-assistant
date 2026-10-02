@@ -64,6 +64,7 @@ SPEED_NL = {
 
 INSIGHTS_META = {
     "min_n": MIN_N,
+    "judge_k": 3,
     "len_short": LEN_SHORT,
     "len_medium": LEN_MEDIUM,
     "len_long": LEN_LONG,

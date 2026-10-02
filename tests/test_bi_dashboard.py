@@ -718,6 +718,87 @@ class TestBiScreenshots(unittest.TestCase):
         self.assertTrue(pub.get("demoBadge"), pub)
         self.assertTrue(all(r == "Replying to a post" for r in (pub.get("replies") or [])), pub)
 
+    def test_heat_and_bars_use_traffic_lights(self):
+        probe = r"""
+<script>
+(function(){
+  function write(report){
+    let el=document.getElementById('layout-report');
+    if(!el){el=document.createElement('pre');el.id='layout-report';document.body.appendChild(el);}
+    el.textContent=JSON.stringify(report);
+  }
+  function inst(sel){
+    const el=document.querySelector(sel);
+    if(!el||typeof echarts==='undefined') return null;
+    return echarts.getInstanceByDom(el);
+  }
+  function opt(sel){
+    const c=inst(sel);
+    return c?c.getOption():null;
+  }
+  function hexOf(c){
+    if(!c) return '';
+    const s=String(c).toLowerCase();
+    if(s.charAt(0)==='#') return s;
+    const m=s.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+    if(!m) return s;
+    return '#'+[m[1],m[2],m[3]].map(x=>('0'+Number(x).toString(16)).slice(-2)).join('');
+  }
+  function go(){
+    setTimeout(function(){
+      const heat=opt('#hp .echart')||opt('.hmwrap .echart')||{};
+      const hser=(heat.series&&heat.series[0]&&heat.series[0].data)||[];
+      const hcols=hser.map(d=>hexOf(d&&d.itemStyle&&d.itemStyle.color)).filter(Boolean);
+      const thin=hser.filter(d=>d&&d.thin).length;
+      const empty=hser.filter(d=>d&&d.empty).length;
+      const tones=hser.map(d=>d&&d.tone).filter(Boolean);
+      const bars=opt('#s8 .echart')||{};
+      const bser=(bars.series&&bars.series[0]&&bars.series[0].data)||[];
+      const bcols=bser.map(d=>hexOf(d&&d.itemStyle&&d.itemStyle.color)).filter(Boolean);
+      const xd=window.__xdash||{};
+      write({
+        legends: document.querySelectorAll('.judge-legend').length,
+        legendText: (document.querySelector('.judge-legend')||{}).textContent||'',
+        advice: (document.querySelector('#hp .judge-advice')||{}).textContent||'',
+        heatN: hser.length,
+        thin, empty,
+        heatHasGreen: hcols.some(c=>/22c55e|15803d/.test(c)),
+        heatHasRed: hcols.some(c=>/f43f5e|b91c1c/.test(c)),
+        heatHasGrey: hcols.some(c=>/64748b|94a3b8/.test(c)),
+        heatHasBlueRamp: hcols.some(c=>/1e3a8a|3b6ea8|60a5fa/.test(c)),
+        tones: [...new Set(tones)],
+        barN: bser.length,
+        barHasGreen: bcols.some(c=>/22c55e|15803d/.test(c)),
+        barHasBlue: bcols.every(c=>c==='#3b82f6') && bcols.length>0,
+        barCols: [...new Set(bcols)],
+        judge: typeof xd.judgeTone==='function',
+        thinTone: xd.judgeTone?xd.judgeTone(999, [1,2,999], 2):null,
+        shrink: typeof xd.shrinkImp==='function'
+      });
+    }, 500);
+  }
+  if(document.readyState==='complete') setTimeout(go,80);
+  else window.addEventListener('load', function(){ setTimeout(go,80); });
+})();
+</script>
+"""
+        report = _chrome_report(self.chrome, self.private, "1440,900", probe)
+        self.assertGreaterEqual(report.get("legends") or 0, 3, report)
+        self.assertIn("worse", (report.get("legendText") or "").lower(), report)
+        self.assertIn("usual", (report.get("legendText") or "").lower(), report)
+        self.assertRegex((report.get("legendText") or "").lower(), r"hint|fewer")
+        self.assertNotIn("too little data", (report.get("legendText") or "").lower(), report)
+        self.assertTrue(report.get("heatHasGreen"), report)
+        self.assertFalse(report.get("heatHasGrey"), report)
+        self.assertFalse(report.get("heatHasBlueRamp"), report)
+        self.assertGreaterEqual(report.get("thin") or 0, 1, report)
+        self.assertTrue(report.get("barHasGreen"), report)
+        self.assertFalse(report.get("barHasBlue"), report)
+        self.assertTrue(report.get("judge"), report)
+        self.assertTrue(report.get("shrink"), report)
+        self.assertIn(report.get("thinTone"), ("green", "yellow", "orange", "red"), report)
+        self.assertRegex((report.get("advice") or "").lower(), r"best time|strongest so far|not proven")
+
     def test_round6_incomplete_top_mix_dscore_calendar(self):
         probe = r"""
 <script>

@@ -18,6 +18,7 @@ class TestConstants(unittest.TestCase):
     def test_bounds_and_min_n(self):
         import insights
         self.assertEqual(insights.MIN_N, 5)
+        self.assertEqual(insights.INSIGHTS_META["judge_k"], 3)
         self.assertEqual(insights.LEN_SHORT, 80)
         self.assertEqual(insights.LEN_MEDIUM, 200)
         self.assertEqual(insights.LEN_LONG, 280)
